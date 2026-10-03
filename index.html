@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Warframe Squad Relic Sync Engine | AlecaFrame Cloudflare Tool</title>
+  <meta name="description" content="Cross-squad Warframe relic sync engine using AlecaFrame public tokens. Target prime warframes and weapons, cross-reference fireteam stock, and calculate radiant trace budgets.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'><path d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/></svg>">
+  <link rel="stylesheet" href="src/css/main.css">
+  <link rel="stylesheet" href="src/css/components.css">
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gold">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title"><span>OROKIN</span> RELIC SYNC</h1>
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.15rem;">
+            <span class="brand-badge">AlecaFrame Sync</span>
+            <span style="font-size: 0.75rem; color: var(--text-faint);">Cloudflare Pages Edition</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button id="btnLoadDemo" class="btn btn-secondary btn-sm" title="Populate 4-player demo squad for testing">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <line x1="20" y1="8" x2="20" y2="14"></line>
+            <line x1="23" y1="11" x2="17" y2="11"></line>
+          </svg>
+          Demo Squad
+        </button>
+
+        <button id="btnManageSquad" class="btn btn-secondary" title="Manage Fireteam Tokens">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          Manage Squad
+        </button>
+
+        <button id="btnSyncSquad" class="btn btn-primary" title="Sync All Squad Relics from AlecaFrame">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+          </svg>
+          Sync Squad
+        </button>
+      </div>
+    </header>
+
+    <!-- Fireteam Roster Bar -->
+    <section class="glass-panel squad-bar">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gold-primary);">
+          Fireteam Roster
+        </span>
+      </div>
+      <div id="squadRosterContainer" class="squad-roster">
+        <!-- Rendered by app.js -->
+      </div>
+    </section>
+
+    <!-- Target Selection Deck -->
+    <section class="target-section">
+      <div class="glass-panel target-search-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label for="targetSearchInput" style="font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: var(--text-main);">
+            Select Prime Target
+          </label>
+          <span style="font-size: 0.8rem; color: var(--text-faint);">Pick a weapon or frame to cross-reference stock</span>
+        </div>
+
+        <div class="search-input-wrapper">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="targetSearchInput" class="target-search-input" placeholder="Search Prime targets (e.g. Protea Prime, Glaive Prime, Gauss Prime...)" autocomplete="off">
+          
+          <!-- Dropdown Results -->
+          <div id="targetDropdownList" class="glass-panel" style="display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; max-height: 280px; overflow-y: auto; z-index: 100;"></div>
+        </div>
+
+        <div class="category-chips">
+          <button class="cat-chip active" data-category="All">All Items</button>
+          <button class="cat-chip" data-category="Warframe">Warframes</button>
+          <button class="cat-chip" data-category="Primary">Primary</button>
+          <button class="cat-chip" data-category="Secondary">Secondary</button>
+          <button class="cat-chip" data-category="Melee">Melee</button>
+        </div>
+      </div>
+
+      <!-- Active Target Preview -->
+      <div id="targetActiveCard" class="glass-panel target-active-card">
+        <!-- Rendered by app.js -->
+      </div>
+    </section>
+
+    <!-- Radiant Trace Planner & Radshare Metrics Banner -->
+    <section class="glass-panel trace-planner-banner">
+      <div class="planner-metric">
+        <div class="metric-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          Immediate 4x Radshares Ready
+        </div>
+        <div class="metric-value-wrap">
+          <span id="valRadsharesReady" class="metric-val gold">0</span>
+          <span class="metric-desc">Concurrent 4-player Radiant runs formable right now</span>
+        </div>
+      </div>
+
+      <div class="planner-metric">
+        <div class="metric-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-cyan">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+          </svg>
+          Void Traces Needed (All Radiant)
+        </div>
+        <div class="metric-value-wrap">
+          <span id="valTotalTraces" class="metric-val cyan">0</span>
+          <span class="metric-desc">Total traces across squad to upgrade all matching stock</span>
+        </div>
+        <div id="memberTracesContainer" class="member-trace-breakdown">
+          <!-- Rendered by app.js -->
+        </div>
+      </div>
+
+      <div class="planner-metric">
+        <div class="metric-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 14 14"></polyline>
+          </svg>
+          Set Completion Odds
+        </div>
+        <div class="metric-value-wrap">
+          <span id="valDropOdds" class="metric-val violet">0%</span>
+          <span class="metric-desc">Estimated probability of obtaining all parts with squad pool</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Component & Relic Inventory Matrix -->
+    <main id="relicMatrixContainer">
+      <!-- Rendered by app.js -->
+    </main>
+
+  </div>
+
+  <!-- Squad Manager Modal -->
+  <div id="squadModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          Fireteam Token Manager
+        </h2>
+        <button id="btnCloseSquadModal" class="btn btn-secondary btn-icon-only">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Add Member Form -->
+        <form id="formAddMember">
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label" for="inputMemberName">Squad Member Name / Gamertag</label>
+            <input type="text" id="inputMemberName" class="form-input" placeholder="e.g. Nova (Host), Alex, Sam..." required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label class="form-label" for="inputMemberToken">AlecaFrame Public Token</label>
+            <input type="text" id="inputMemberToken" class="form-input" placeholder="Paste Public Token from AlecaFrame app (Stats -> Create Public Link)" required>
+            <span class="form-helper">
+              In AlecaFrame: Go to <strong>Stats</strong> &rarr; <strong>Create Public Link</strong> &rarr; ensure <strong>"Relics"</strong> is checked &rarr; <strong>Generate token</strong>.
+            </span>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Add Member & Import Relics
+          </button>
+        </form>
+
+        <hr style="border: none; border-top: 1px solid var(--border-glass);">
+
+        <!-- Active Squad Members List -->
+        <div>
+          <label class="form-label" style="margin-bottom: 0.75rem; display: block;">Active Fireteam Members</label>
+          <div id="squadMemberListManage" class="member-list-manage">
+            <!-- Rendered by app.js -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('squadModal').classList.remove('open')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Main ES Module Bootstrapper -->
+  <script type="module" src="src/js/app.js"></script>
+</body>
+</html>
