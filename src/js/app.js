@@ -1,30 +1,60 @@
 /**
  * Warframe Squad Relic Sync Engine - Main Application Controller
+ * Features:
+ * - Comprehensive Prime Source of Truth Catalog with live warframestat.us fallback
+ * - Real-time Warframe.Market Platinum Pricing for sets and individual parts
+ * - Canonical Relic Farming Nodes (Hepit, Apollo, Ukko, etc.) and Vault Status
+ * - Cross-Fireteam Relic Stock Matrix & Radiant Trace Deficit Optimizer
+ * - Stacking-Safe Floating Search Dropdown
  */
 
-import { PRIME_RELIC_MAP } from '../data/primeRelicMap.js';
+import { PrimeRepository } from './primeRepository.js';
+import { WarframeMarketClient } from './marketClient.js';
+import { getRelicAcquisitionInfo } from '../data/relicFarmingNodes.js';
 import { SquadManager } from './squadManager.js';
 import { evaluateComponentSquadStock } from './probability.js';
 import { getStoredActiveTarget, saveStoredActiveTarget } from './storage.js';
+import { AuthManager } from './authManager.js';
+import { MasteryController } from './masteryController.js';
 
 class WarframeSquadApp {
   constructor() {
+    this.primeRepo = new PrimeRepository();
+    this.marketClient = new WarframeMarketClient();
     this.squadManager = new SquadManager();
+    this.authManager = new AuthManager();
+
     this.activeTargetName = getStoredActiveTarget();
     this.currentCategory = 'All';
     this.searchQuery = '';
     this.squadInventories = {};
+    this.marketData = null;
+    this.isMarketLoading = false;
+    this.currentView = 'relic'; // 'relic' | 'mastery'
 
     this.initElements();
+    this.masteryController = new MasteryController({
+      container: this.masteryAssistantView,
+      marketClient: this.marketClient,
+      onPursueTarget: (targetName) => this.handlePursueFromMastery(targetName)
+    });
+
     this.attachEventListeners();
   }
 
   initElements() {
-    // Top Bar
+    // View Switching Tabs & Views
+    this.tabRelicEngine = document.getElementById('tabRelicEngine');
+    this.tabMasteryAssistant = document.getElementById('tabMasteryAssistant');
+    this.relicEngineView = document.getElementById('relicEngineView');
+    this.masteryAssistantView = document.getElementById('masteryAssistantView');
+
+    // Top Bar & Navigation Actions
     this.btnSyncSquad = document.getElementById('btnSyncSquad');
     this.btnManageSquad = document.getElementById('btnManageSquad');
     this.btnLoadDemo = document.getElementById('btnLoadDemo');
     this.squadRosterContainer = document.getElementById('squadRosterContainer');
+    this.userProfileArea = document.getElementById('userProfileArea');
 
     // Target Selection
     this.targetSearchInput = document.getElementById('targetSearchInput');
@@ -41,20 +71,47 @@ class WarframeSquadApp {
     // Relic Matrix
     this.relicMatrixContainer = document.getElementById('relicMatrixContainer');
 
-    // Modals
+    // Squad Modal & Room PIN
     this.squadModal = document.getElementById('squadModal');
     this.btnCloseSquadModal = document.getElementById('btnCloseSquadModal');
     this.formAddMember = document.getElementById('formAddMember');
     this.inputMemberName = document.getElementById('inputMemberName');
     this.inputMemberToken = document.getElementById('inputMemberToken');
     this.squadMemberListManage = document.getElementById('squadMemberListManage');
+    this.labelCurrentRoom = document.getElementById('labelCurrentRoom');
+    this.inputRoomCode = document.getElementById('inputRoomCode');
+    this.inputRoomPin = document.getElementById('inputRoomPin');
+    this.btnUpdateRoom = document.getElementById('btnUpdateRoom');
+
+    // Auth Modal
+    this.authModal = document.getElementById('authModal');
+    this.btnCloseAuthModal = document.getElementById('btnCloseAuthModal');
+    this.formAuthLogin = document.getElementById('formAuthLogin');
+    this.inputAuthPlayerName = document.getElementById('inputAuthPlayerName');
+    this.inputAuthPin = document.getElementById('inputAuthPin');
+
+    // Companion Desktop Assistant Modal
+    this.btnDownloadCompanion = document.getElementById('btnDownloadCompanion');
+    this.companionModal = document.getElementById('companionModal');
+    this.btnCloseCompanionModal = document.getElementById('btnCloseCompanionModal');
+    this.btnCloseCompanionModalFooter = document.getElementById('btnCloseCompanionModalFooter');
+    this.btnDownloadConfigJson = document.getElementById('btnDownloadConfigJson');
+    this.companionConfigPreview = document.getElementById('companionConfigPreview');
 
     // Toasts
     this.toastContainer = document.getElementById('toastContainer');
   }
 
   attachEventListeners() {
-    // Squad sync
+    // View switcher tabs
+    if (this.tabRelicEngine) {
+      this.tabRelicEngine.addEventListener('click', () => this.switchView('relic'));
+    }
+    if (this.tabMasteryAssistant) {
+      this.tabMasteryAssistant.addEventListener('click', () => this.switchView('mastery'));
+    }
+
+    // Squad actions
     this.btnSyncSquad.addEventListener('click', () => this.handleSyncSquad());
     this.btnManageSquad.addEventListener('click', () => this.openSquadModal());
     this.btnCloseSquadModal.addEventListener('click', () => this.closeSquadModal());
@@ -62,10 +119,47 @@ class WarframeSquadApp {
       this.btnLoadDemo.addEventListener('click', () => this.handleLoadDemoSquad());
     }
 
+    // Room update
+    if (this.btnUpdateRoom) {
+      this.btnUpdateRoom.addEventListener('click', () => this.handleUpdateRoom());
+    }
+
+    // Auth modal events
+    if (this.btnCloseAuthModal) {
+      this.btnCloseAuthModal.addEventListener('click', () => this.closeAuthModal());
+    }
+    if (this.formAuthLogin) {
+      this.formAuthLogin.addEventListener('submit', (e) => this.handleAuthSubmit(e));
+    }
+    if (this.authModal) {
+      this.authModal.addEventListener('click', (e) => {
+        if (e.target === this.authModal) this.closeAuthModal();
+      });
+    }
+
     // Modal background click
     this.squadModal.addEventListener('click', (e) => {
       if (e.target === this.squadModal) this.closeSquadModal();
     });
+
+    // Companion desktop assistant modal events
+    if (this.btnDownloadCompanion) {
+      this.btnDownloadCompanion.addEventListener('click', () => this.openCompanionModal());
+    }
+    if (this.btnCloseCompanionModal) {
+      this.btnCloseCompanionModal.addEventListener('click', () => this.closeCompanionModal());
+    }
+    if (this.btnCloseCompanionModalFooter) {
+      this.btnCloseCompanionModalFooter.addEventListener('click', () => this.closeCompanionModal());
+    }
+    if (this.companionModal) {
+      this.companionModal.addEventListener('click', (e) => {
+        if (e.target === this.companionModal) this.closeCompanionModal();
+      });
+    }
+    if (this.btnDownloadConfigJson) {
+      this.btnDownloadConfigJson.addEventListener('click', () => this.handleDownloadConfigJson());
+    }
 
     // Form add member
     this.formAddMember.addEventListener('submit', (e) => this.handleAddMember(e));
@@ -74,6 +168,12 @@ class WarframeSquadApp {
     this.targetSearchInput.addEventListener('input', (e) => {
       this.searchQuery = e.target.value.toLowerCase().trim();
       this.renderTargetDropdown();
+    });
+
+    this.targetSearchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.targetDropdownList.style.display = 'none';
+      }
     });
 
     this.categoryChips.forEach(chip => {
@@ -98,19 +198,51 @@ class WarframeSquadApp {
   }
 
   async start() {
+    // 1. Check for URL auto-login from tray companion (#player=...&token=...)
+    const autoSession = await this.authManager.checkUrlAutoLogin();
+    if (autoSession) {
+      this.showToast(`Auto-authenticated as ${autoSession.playerName} via companion tray!`, 'success');
+    }
+
+    // 2. Active player setup
+    const activePlayer = this.authManager.getCurrentPlayer() || 'Player2';
+    this.updateUserProfileNav();
+    await this.masteryController.loadPlayer(activePlayer);
+
+    // 3. Squad initialization
     const members = this.squadManager.getMembers();
     if (members.length === 0) {
-      // Auto-seed demo squad if brand new session for immediate out-of-the-box delight
+      // Auto-seed demo squad if brand new session for immediate out-of-the-box preview
       await this.squadManager.seedDemoSquad();
-      this.showToast('Initialized demo fireteam. Click "Manage Squad" to add real AlecaFrame tokens.', 'info');
     }
 
     await this.refreshSquadData();
     this.render();
+
+    // Fetch initial market data for the active target
+    this.fetchMarketPricing();
   }
 
   async refreshSquadData() {
     this.squadInventories = await this.squadManager.getSquadInventories();
+  }
+
+  async fetchMarketPricing() {
+    const target = this.primeRepo.getByName(this.activeTargetName);
+    if (!target) return;
+
+    this.isMarketLoading = true;
+    this.renderActiveTargetCard();
+
+    try {
+      this.marketData = await this.marketClient.getFullTargetMarketData(target);
+    } catch (e) {
+      console.warn('Market fetch error:', e);
+    } finally {
+      this.isMarketLoading = false;
+      this.renderActiveTargetCard();
+      this.renderRelicMatrixAndPlanner();
+    }
   }
 
   async handleSyncSquad() {
@@ -182,13 +314,202 @@ class WarframeSquadApp {
     this.squadModal.classList.remove('open');
   }
 
+  openCompanionModal() {
+    const activePlayer = this.authManager.getCurrentPlayer() || 'Tenno';
+    const roomCode = (this.labelCurrentRoom && this.labelCurrentRoom.textContent) ? this.labelCurrentRoom.textContent.trim() : 'OROKIN-7741';
+    const serverUrl = window.location.origin;
+
+    const sampleConfig = {
+      serverUrl: serverUrl,
+      playerName: activePlayer,
+      roomCode: roomCode
+    };
+
+    if (this.companionConfigPreview) {
+      this.companionConfigPreview.textContent = JSON.stringify(sampleConfig, null, 2);
+    }
+    if (this.companionModal) {
+      this.companionModal.classList.add('open');
+    }
+  }
+
+  closeCompanionModal() {
+    if (this.companionModal) {
+      this.companionModal.classList.remove('open');
+    }
+  }
+
+  handleDownloadConfigJson() {
+    const activePlayer = this.authManager.getCurrentPlayer() || 'Tenno';
+    const roomCode = (this.labelCurrentRoom && this.labelCurrentRoom.textContent) ? this.labelCurrentRoom.textContent.trim() : 'OROKIN-7741';
+    const serverUrl = window.location.origin;
+
+    const config = {
+      serverUrl: serverUrl,
+      playerName: activePlayer,
+      roomCode: roomCode
+    };
+
+    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'config.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    this.showToast('Downloaded config.json! Drop it next to TennoRelicSync.exe.', 'success');
+  }
+
   setTarget(targetName) {
     this.activeTargetName = targetName;
     saveStoredActiveTarget(targetName);
     this.targetSearchInput.value = '';
     this.searchQuery = '';
     this.targetDropdownList.style.display = 'none';
+    this.marketData = null;
     this.render();
+    this.fetchMarketPricing();
+  }
+
+  switchView(viewName) {
+    this.currentView = viewName;
+    if (viewName === 'mastery') {
+      if (this.tabRelicEngine) this.tabRelicEngine.classList.remove('active');
+      if (this.tabMasteryAssistant) this.tabMasteryAssistant.classList.add('active');
+      if (this.relicEngineView) this.relicEngineView.style.display = 'none';
+      if (this.masteryAssistantView) {
+        this.masteryAssistantView.style.display = 'flex';
+        this.masteryController.render();
+      }
+    } else {
+      if (this.tabMasteryAssistant) this.tabMasteryAssistant.classList.remove('active');
+      if (this.tabRelicEngine) this.tabRelicEngine.classList.add('active');
+      if (this.masteryAssistantView) this.masteryAssistantView.style.display = 'none';
+      if (this.relicEngineView) {
+        this.relicEngineView.style.display = 'block';
+        this.render();
+      }
+    }
+  }
+
+  handlePursueFromMastery(targetName) {
+    this.switchView('relic');
+    this.setTarget(targetName);
+    this.showToast(`✦ Pursuing ${targetName}! Squad relic stock & radiant trace plan updated.`, 'success');
+  }
+
+  openAuthModal() {
+    const current = this.authManager.getCurrentPlayer() || '';
+    if (this.inputAuthPlayerName) this.inputAuthPlayerName.value = current;
+    if (this.inputAuthPin) this.inputAuthPin.value = '';
+    if (this.authModal) this.authModal.classList.add('open');
+  }
+
+  closeAuthModal() {
+    if (this.authModal) this.authModal.classList.remove('open');
+  }
+
+  async handleAuthSubmit(e) {
+    e.preventDefault();
+    const playerName = this.inputAuthPlayerName.value.trim();
+    const pin = this.inputAuthPin.value.trim();
+
+    if (!playerName || !pin) {
+      this.showToast('Please enter both your Gamertag and 4-digit PIN.', 'error');
+      return;
+    }
+
+    const res = await this.authManager.login(playerName, pin);
+    if (!res.ok) {
+      this.showToast(res.error || 'Authentication failed', 'error');
+      return;
+    }
+
+    this.closeAuthModal();
+    this.updateUserProfileNav();
+    await this.masteryController.loadPlayer(playerName);
+    this.showToast(`Sanctum unlocked for ${playerName}!`, 'success');
+  }
+
+  handleLogout() {
+    const prev = this.authManager.getCurrentPlayer();
+    this.authManager.logout();
+    this.updateUserProfileNav();
+    this.masteryController.loadPlayer('Tenno');
+    this.showToast(`Tenno ${prev} signed out.`, 'info');
+  }
+
+  updateUserProfileNav() {
+    if (!this.userProfileArea) return;
+    const player = this.authManager.getCurrentPlayer();
+
+    if (player) {
+      const metrics = this.masteryController.calculateMasteryMetrics();
+      this.userProfileArea.innerHTML = `
+        <div class="user-profile-badge" title="Click to view Mastery Dossier">
+          <div class="user-avatar-gold">✦</div>
+          <div class="user-meta">
+            <span class="user-gamertag">${player}</span>
+            <span class="user-mr-badge">MR ${metrics.rank}</span>
+          </div>
+          <button id="btnLogout" class="btn-icon-subtle" title="Sign Out of Tenno Sanctum">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+      `;
+
+      const badge = this.userProfileArea.querySelector('.user-profile-badge');
+      if (badge) {
+        badge.addEventListener('click', (e) => {
+          if (e.target.closest('#btnLogout')) return;
+          this.switchView('mastery');
+        });
+      }
+
+      const btnLogout = this.userProfileArea.querySelector('#btnLogout');
+      if (btnLogout) {
+        btnLogout.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.handleLogout();
+        });
+      }
+    } else {
+      this.userProfileArea.innerHTML = `
+        <button id="btnOpenAuthModal" class="btn btn-secondary btn-sm" title="Sign in with Gamertag and 4-digit PIN">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Sign In (PIN)
+        </button>
+      `;
+
+      const btnOpen = this.userProfileArea.querySelector('#btnOpenAuthModal');
+      if (btnOpen) {
+        btnOpen.addEventListener('click', () => this.openAuthModal());
+      }
+    }
+  }
+
+  handleUpdateRoom() {
+    const code = this.inputRoomCode?.value.trim().toUpperCase() || 'OROKIN-7741';
+    const pin = this.inputRoomPin?.value.trim() || '';
+
+    if (pin && (pin.length !== 4 || !/^\d{4}$/.test(pin))) {
+      this.showToast('Room PIN must be 4 digits', 'error');
+      return;
+    }
+
+    if (this.labelCurrentRoom) this.labelCurrentRoom.textContent = code;
+    this.authManager.saveRoomPin(code, pin);
+    this.showToast(`Active room set to ${code}${pin ? ' (Protected with 4-Digit PIN)' : ''}`, 'success');
   }
 
   // -------------------------------------------------------------
@@ -242,60 +563,89 @@ class WarframeSquadApp {
   }
 
   renderActiveTargetCard() {
-    const target = PRIME_RELIC_MAP.find(t => t.name === this.activeTargetName) || PRIME_RELIC_MAP[0];
-    this.activeTargetName = target.name;
+    const target = this.primeRepo.getByName(this.activeTargetName);
+    if (!target) return;
 
+    this.activeTargetName = target.name;
     const vaultClass = target.vaulted ? 'vaulted' : 'unvaulted';
     const vaultText = target.vaulted ? 'Vaulted' : 'Active Drop';
+
+    const setPrice = this.marketData?.setSummary?.lowestPrice;
+    const topSeller = this.marketData?.setSummary?.topSeller;
 
     this.targetActiveCard.innerHTML = `
       <div class="target-category-badge">${target.category} Prime Target</div>
       <div class="target-name">${target.name}</div>
       <div class="target-meta-row">
         <span class="vault-badge ${vaultClass}">${vaultText}</span>
-        <span style="font-size: 0.8rem; color: var(--text-faint);">${target.components.length} Components to Craft</span>
+        <span style="font-size: 0.8rem; color: var(--text-faint);">${target.components.length} Components</span>
+        
+        <!-- Live Market Price Tag -->
+        ${this.isMarketLoading ? `
+          <span class="market-badge" style="opacity: 0.7;">
+            <svg class="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+            </svg>
+            Fetching Market...
+          </span>
+        ` : (setPrice ? `
+          <span class="market-badge gold" title="Lowest In-Game Sell Order on Warframe.Market">
+            <span class="plat-symbol">✦</span> Full Set: ${setPrice}p
+            ${topSeller ? `<span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">(via ${topSeller})</span>` : ''}
+          </span>
+        ` : '')}
       </div>
     `;
   }
 
   renderTargetDropdown() {
-    const filtered = PRIME_RELIC_MAP.filter(item => {
-      const matchesCategory = this.currentCategory === 'All' || item.category === this.currentCategory;
-      const matchesSearch = !this.searchQuery || item.name.toLowerCase().includes(this.searchQuery);
-      return matchesCategory && matchesSearch;
-    });
+    const results = this.primeRepo.search(this.searchQuery, this.currentCategory);
 
-    if (filtered.length === 0) {
-      this.targetDropdownList.innerHTML = `<div style="padding: 1rem; color: var(--text-faint);">No prime targets found.</div>`;
+    if (results.length === 0) {
+      this.targetDropdownList.innerHTML = `
+        <div style="padding: 1.25rem; text-align: center; color: var(--text-faint);">
+          <div>No prime targets found locally for "${this.searchQuery}".</div>
+          <button id="btnSearchLiveFallback" class="btn btn-cyan btn-sm" style="margin-top: 0.75rem;">
+            Search WarframeStat.us Live
+          </button>
+        </div>
+      `;
+
+      const btnLive = this.targetDropdownList.querySelector('#btnSearchLiveFallback');
+      if (btnLive) {
+        btnLive.addEventListener('click', async () => {
+          btnLive.textContent = 'Searching live...';
+          const found = await this.primeRepo.fetchLiveFallback(this.searchQuery);
+          if (found) {
+            this.setTarget(found.name);
+            this.showToast(`Imported ${found.name} from live Warframe database!`, 'success');
+          } else {
+            this.showToast(`No live Prime item found matching "${this.searchQuery}".`, 'error');
+          }
+        });
+      }
+
       this.targetDropdownList.style.display = 'block';
       return;
     }
 
     this.targetDropdownList.innerHTML = '';
-    filtered.forEach(item => {
+    // Show top 30 matching items
+    results.slice(0, 30).forEach(item => {
       const itemEl = document.createElement('div');
       itemEl.className = 'dropdown-item';
-      itemEl.style.padding = '0.75rem 1rem';
-      itemEl.style.cursor = 'pointer';
-      itemEl.style.display = 'flex';
-      itemEl.style.justifyContent = 'space-between';
-      itemEl.style.alignItems = 'center';
-      itemEl.style.borderBottom = '1px solid rgba(255, 255, 255, 0.05)';
 
       itemEl.innerHTML = `
-        <div>
-          <span style="font-weight: 600; color: #fff;">${item.name}</span>
-          <span style="font-size: 0.75rem; color: var(--text-faint); margin-left: 0.5rem;">${item.category}</span>
+        <div style="display: flex; align-items: center; gap: 0.65rem;">
+          <span style="font-weight: 700; color: #fff;">${item.name}</span>
+          <span style="font-size: 0.75rem; color: var(--text-faint); padding: 0.1rem 0.4rem; background: rgba(255,255,255,0.06); border-radius: 4px;">${item.category}</span>
         </div>
         <span class="vault-badge ${item.vaulted ? 'vaulted' : 'unvaulted'}" style="font-size: 0.7rem;">
           ${item.vaulted ? 'Vaulted' : 'Active'}
         </span>
       `;
 
-      itemEl.addEventListener('mouseenter', () => itemEl.style.background = 'rgba(245, 158, 11, 0.1)');
-      itemEl.addEventListener('mouseleave', () => itemEl.style.background = 'transparent');
       itemEl.addEventListener('click', () => this.setTarget(item.name));
-
       this.targetDropdownList.appendChild(itemEl);
     });
 
@@ -303,9 +653,10 @@ class WarframeSquadApp {
   }
 
   renderRelicMatrixAndPlanner() {
-    const target = PRIME_RELIC_MAP.find(t => t.name === this.activeTargetName) || PRIME_RELIC_MAP[0];
-    const members = this.squadManager.getMembers();
+    const target = this.primeRepo.getByName(this.activeTargetName);
+    if (!target) return;
 
+    const members = this.squadManager.getMembers();
     this.relicMatrixContainer.innerHTML = '';
 
     let grandTotalRadshares = 0;
@@ -326,6 +677,9 @@ class WarframeSquadApp {
       Object.entries(stats.memberTraceRequirements).forEach(([id, traces]) => {
         aggregatedMemberTraces[id] = (aggregatedMemberTraces[id] || 0) + traces;
       });
+
+      // Get individual component market price
+      const compMarket = this.marketData?.componentSummaries?.[comp.name];
 
       // Build component card DOM
       const card = document.createElement('div');
@@ -358,6 +712,8 @@ class WarframeSquadApp {
           `;
         });
 
+        const acqInfo = getRelicAcquisitionInfo(row.era, row.vaulted);
+
         tableRows += `
           <tr>
             <td>
@@ -370,14 +726,17 @@ class WarframeSquadApp {
               <span class="rarity-pill rarity-${row.rarity}">${row.rarity}</span>
             </td>
             <td>
-              <span class="vault-badge ${row.vaulted ? 'vaulted' : 'unvaulted'}" style="font-size: 0.7rem;">
-                ${row.vaulted ? 'Vaulted' : 'Active'}
-              </span>
+              <div class="farm-source-badge" title="${acqInfo.advice}">
+                <span class="vault-badge ${acqInfo.badgeClass}" style="font-size: 0.68rem; margin-bottom: 0.15rem; width: fit-content;">
+                  ${acqInfo.status}
+                </span>
+                <span class="farm-source-name" style="font-size: 0.72rem;">${acqInfo.location}</span>
+              </div>
             </td>
             ${memberCells}
             <td style="font-weight: 700; color: #fff;">${row.totalCount}</td>
-            <td style="color: var(--cyan-primary); font-weight: 600;">
-              ${row.tracesToRadiantAll > 0 ? `${row.tracesToRadiantAll} Traces` : '<span style="color: var(--emerald-prime);">All Radiant</span>'}
+            <td style="color: var(--gold-primary); font-weight: 600;">
+              ${row.tracesToRadiantAll > 0 ? `${row.tracesToRadiantAll} Traces` : '<span style="color: var(--jade-prime);">All Radiant</span>'}
             </td>
           </tr>
         `;
@@ -396,10 +755,20 @@ class WarframeSquadApp {
               <span class="comp-count-pill">${comp.count} Required</span>
             </div>
           </div>
-          <div class="comp-odds-badge">
-            <span style="color: var(--text-faint);">Current Squad Odds:</span>
-            <span class="odds-number">${oddsPercent}%</span>
-            <span style="color: var(--text-faint); margin-left: 0.5rem;">(Max Radiant: <span style="color: var(--gold-primary); font-weight: 700;">${potentialPercent}%</span>)</span>
+
+          <div class="comp-meta-actions">
+            <!-- Individual Component Market Price Tag -->
+            ${compMarket?.lowestPrice ? `
+              <span class="market-badge" title="Lowest In-Game Sell Order for this part on Warframe.Market">
+                <span class="plat-symbol">✦</span> Part: ${compMarket.lowestPrice}p
+              </span>
+            ` : ''}
+
+            <div class="comp-odds-badge">
+              <span style="color: var(--text-faint);">Current Squad Odds:</span>
+              <span class="odds-number">${oddsPercent}%</span>
+              <span style="color: var(--text-faint); margin-left: 0.5rem;">(Max Radiant: <span style="color: var(--gold-primary); font-weight: 700;">${potentialPercent}%</span>)</span>
+            </div>
           </div>
         </div>
         <div class="table-responsive">
@@ -408,7 +777,7 @@ class WarframeSquadApp {
               <tr>
                 <th>Relic</th>
                 <th>Rarity</th>
-                <th>Status</th>
+                <th>Acquisition / Source</th>
                 ${memberHeaderCols}
                 <th>Squad Total</th>
                 <th>Trace Cost</th>
@@ -429,7 +798,6 @@ class WarframeSquadApp {
     this.valTotalTraces.textContent = grandTotalTraces.toLocaleString();
 
     // Cumulative item drop odds (all components together)
-    // Probability of securing all components:
     const allComponentsSuccessRate = componentStatsList.reduce((acc, curr) => acc * curr.stats.currentOdds, 1);
     this.valDropOdds.textContent = `${(allComponentsSuccessRate * 100).toFixed(0)}%`;
 

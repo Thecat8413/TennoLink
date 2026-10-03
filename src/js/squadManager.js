@@ -12,12 +12,12 @@ import {
 import { AlecaFrameClient } from './api.js';
 
 export const SQUAD_COLORS = [
-  { name: 'Orokin Gold', hex: '#f59e0b', bg: 'rgba(245, 158, 11, 0.15)', border: '#f59e0b' },
-  { name: 'Void Cyan', hex: '#00e5ff', bg: 'rgba(0, 229, 255, 0.15)', border: '#00e5ff' },
-  { name: 'Lotus Violet', hex: '#d946ef', bg: 'rgba(217, 70, 239, 0.15)', border: '#d946ef' },
-  { name: 'Tenno Emerald', hex: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', border: '#10b981' },
-  { name: 'Solar Amber', hex: '#f97316', bg: 'rgba(249, 115, 22, 0.15)', border: '#f97316' },
-  { name: 'Electric Blue', hex: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)', border: '#3b82f6' }
+  { name: 'Vitruvian Gold', hex: '#e5c577', bg: 'rgba(229, 197, 119, 0.15)', border: '#e5c577' },
+  { name: 'Orokin Bronze', hex: '#c99b5d', bg: 'rgba(201, 155, 93, 0.15)', border: '#c99b5d' },
+  { name: 'Celestine Argent', hex: '#9db4c0', bg: 'rgba(157, 180, 192, 0.15)', border: '#9db4c0' },
+  { name: 'Vitruvian Jade', hex: '#87aa8e', bg: 'rgba(135, 170, 142, 0.15)', border: '#87aa8e' },
+  { name: 'Solar Copper', hex: '#d48b59', bg: 'rgba(212, 139, 89, 0.15)', border: '#d48b59' },
+  { name: 'Void Umber', hex: '#b3957b', bg: 'rgba(179, 149, 123, 0.15)', border: '#b3957b' }
 ];
 
 export class SquadManager {

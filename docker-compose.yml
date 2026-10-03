@@ -1,0 +1,33 @@
+services:
+  warframe-helper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: warframe-helper
+    restart: unless-stopped
+    ports:
+      # Map to host port. Can be bound to 127.0.0.1:3000 to keep it strictly behind a reverse proxy,
+      # or 0.0.0.0:3000 for direct private LAN / WireGuard subnet access.
+      - "${HOST_BIND_IP:-0.0.0.0}:${PORT:-3000}:3000"
+    volumes:
+      # Persistent SQLite storage for squad rooms, fireteam syncs, and mastery records
+      - ./data:/app/data
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATA_DIR=/app/data
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+    # Optional Reverse Proxy Labels Example (Traefik):
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.warframe.rule=Host(`warframe.myhome.net`)"
+    #   - "traefik.http.routers.warframe.entrypoints=websecure"
+    #   - "traefik.http.routers.warframe.tls.certresolver=letsencrypt"
+    #   - "traefik.http.services.warframe.loadbalancer.server.port=3000"
