@@ -52,7 +52,6 @@ class WarframeSquadApp {
     // Top Bar & Navigation Actions
     this.btnSyncSquad = document.getElementById('btnSyncSquad');
     this.btnManageSquad = document.getElementById('btnManageSquad');
-    this.btnLoadDemo = document.getElementById('btnLoadDemo');
     this.squadRosterContainer = document.getElementById('squadRosterContainer');
     this.userProfileArea = document.getElementById('userProfileArea');
 
@@ -115,9 +114,6 @@ class WarframeSquadApp {
     this.btnSyncSquad.addEventListener('click', () => this.handleSyncSquad());
     this.btnManageSquad.addEventListener('click', () => this.openSquadModal());
     this.btnCloseSquadModal.addEventListener('click', () => this.closeSquadModal());
-    if (this.btnLoadDemo) {
-      this.btnLoadDemo.addEventListener('click', () => this.handleLoadDemoSquad());
-    }
 
     // Room update
     if (this.btnUpdateRoom) {
@@ -205,17 +201,11 @@ class WarframeSquadApp {
     }
 
     // 2. Active player setup
-    const activePlayer = this.authManager.getCurrentPlayer() || 'Player2';
+    const activePlayer = this.authManager.getCurrentPlayer() || 'Tenno';
     this.updateUserProfileNav();
     await this.masteryController.loadPlayer(activePlayer);
 
     // 3. Squad initialization
-    const members = this.squadManager.getMembers();
-    if (members.length === 0) {
-      // Auto-seed demo squad if brand new session for immediate out-of-the-box preview
-      await this.squadManager.seedDemoSquad();
-    }
-
     await this.refreshSquadData();
     this.render();
 
@@ -262,15 +252,6 @@ class WarframeSquadApp {
       this.btnSyncSquad.classList.remove('loading');
       if (icon) icon.classList.remove('animate-spin');
     }
-  }
-
-  async handleLoadDemoSquad() {
-    this.showToast('Loading 4-player demo squad...', 'info');
-    await this.squadManager.seedDemoSquad();
-    await this.refreshSquadData();
-    this.render();
-    this.renderSquadModalManageList();
-    this.showToast('Demo squad populated with sample relic stock!', 'success');
   }
 
   async handleAddMember(e) {
@@ -550,7 +531,6 @@ class WarframeSquadApp {
         <div class="squad-member-info">
           <div class="squad-member-name">
             ${m.name}
-            ${m.isMock ? '<span style="font-size: 0.65rem; color: var(--gold-primary); font-weight: 700;">[DEMO]</span>' : ''}
           </div>
           <div class="squad-member-sub">
             <span class="status-dot ${statusClass}"></span>
