@@ -13,7 +13,7 @@ import { WarframeMarketClient } from './marketClient.js';
 import { getRelicAcquisitionInfo } from '../data/relicFarmingNodes.js';
 import { SquadManager } from './squadManager.js';
 import { evaluateComponentSquadStock } from './probability.js';
-import { getStoredActiveTarget, saveStoredActiveTarget } from './storage.js';
+import { getStoredActiveTarget, saveStoredActiveTarget, getStoredActiveRoom, saveStoredActiveRoom } from './storage.js';
 import { AuthManager } from './authManager.js';
 import { MasteryController } from './masteryController.js';
 
@@ -31,6 +31,7 @@ class WarframeSquadApp {
     this.marketData = null;
     this.isMarketLoading = false;
     this.currentView = 'relic'; // 'relic' | 'mastery'
+    this.activeRoom = getStoredActiveRoom();
 
     this.initElements();
     this.masteryController = new MasteryController({
@@ -38,6 +39,10 @@ class WarframeSquadApp {
       marketClient: this.marketClient,
       onPursueTarget: (targetName) => this.handlePursueFromMastery(targetName)
     });
+
+    if (this.labelCurrentRoom) {
+      this.labelCurrentRoom.textContent = this.activeRoom;
+    }
 
     this.attachEventListeners();
   }
@@ -69,6 +74,11 @@ class WarframeSquadApp {
 
     // Relic Matrix
     this.relicMatrixContainer = document.getElementById('relicMatrixContainer');
+
+    // Settings Modal
+    this.btnManageSettings = document.getElementById('btnManageSettings');
+    this.settingsModal = document.getElementById('settingsModal');
+    this.btnCloseSettingsModal = document.getElementById('btnCloseSettingsModal');
 
     // Squad Modal & Room PIN
     this.squadModal = document.getElementById('squadModal');
@@ -122,6 +132,19 @@ class WarframeSquadApp {
     this.btnSyncSquad.addEventListener('click', () => this.handleSyncSquad());
     this.btnManageSquad.addEventListener('click', () => this.openSquadModal());
     this.btnCloseSquadModal.addEventListener('click', () => this.closeSquadModal());
+
+    // Settings actions
+    if (this.btnManageSettings) {
+      this.btnManageSettings.addEventListener('click', () => this.openSettingsModal());
+    }
+    if (this.btnCloseSettingsModal) {
+      this.btnCloseSettingsModal.addEventListener('click', () => this.closeSettingsModal());
+    }
+    if (this.settingsModal) {
+      this.settingsModal.addEventListener('click', (e) => {
+        if (e.target === this.settingsModal) this.closeSettingsModal();
+      });
+    }
 
     // Room update
     if (this.btnUpdateRoom) {
@@ -335,6 +358,14 @@ class WarframeSquadApp {
     this.showToast('Member removed from fireteam.', 'info');
   }
 
+  openSettingsModal() {
+    if (this.settingsModal) this.settingsModal.classList.add('open');
+  }
+
+  closeSettingsModal() {
+    if (this.settingsModal) this.settingsModal.classList.remove('open');
+  }
+
   openSquadModal() {
     this.renderSquadModalManageList();
     this.squadModal.classList.add('open');
@@ -346,7 +377,7 @@ class WarframeSquadApp {
 
   openCompanionModal() {
     const activePlayer = this.authManager.getCurrentPlayer() || 'Tenno';
-    const roomCode = (this.labelCurrentRoom && this.labelCurrentRoom.textContent) ? this.labelCurrentRoom.textContent.trim() : 'OROKIN-7741';
+    const roomCode = this.activeRoom || 'OROKIN-7741';
     const serverUrl = window.location.origin;
 
     const sampleConfig = {
@@ -371,7 +402,7 @@ class WarframeSquadApp {
 
   handleDownloadConfigJson() {
     const activePlayer = this.authManager.getCurrentPlayer() || 'Tenno';
-    const roomCode = (this.labelCurrentRoom && this.labelCurrentRoom.textContent) ? this.labelCurrentRoom.textContent.trim() : 'OROKIN-7741';
+    const roomCode = this.activeRoom || 'OROKIN-7741';
     const serverUrl = window.location.origin;
 
     const config = {
@@ -406,9 +437,7 @@ class WarframeSquadApp {
 
     try {
       const buffer = await file.arrayBuffer();
-      const currentRoom = (this.labelCurrentRoom && this.labelCurrentRoom.textContent)
-        ? this.labelCurrentRoom.textContent.trim()
-        : 'OROKIN-7741';
+      const currentRoom = this.activeRoom || 'OROKIN-7741';
 
       const endpoint = `/api/upload/dat?player=${encodeURIComponent(targetPlayer)}&room=${encodeURIComponent(currentRoom)}`;
 

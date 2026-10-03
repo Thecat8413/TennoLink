@@ -35,6 +35,14 @@ export class SquadManager {
     return this.members;
   }
 
+  async clearMembers() {
+    for (const m of this.members) {
+      await deleteMemberRelics(m.id);
+    }
+    this.members = [];
+    saveStoredSquadMembers(this.members);
+  }
+
   /**
    * Add a new member to the squad
    * @param {string} name

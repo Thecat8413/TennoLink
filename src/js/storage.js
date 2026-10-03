@@ -11,6 +11,7 @@ const STORE_RELICS = 'member_relics';
 const LS_SQUAD_MEMBERS = 'wf_squad_members';
 const LS_ACTIVE_TARGET = 'wf_active_target';
 const LS_SETTINGS = 'wf_app_settings';
+const LS_ACTIVE_ROOM = 'wf_active_room';
 
 /**
  * Initializes and returns the IndexedDB database instance
@@ -131,4 +132,12 @@ export function getStoredSettings() {
 
 export function saveStoredSettings(settings) {
   localStorage.setItem(LS_SETTINGS, JSON.stringify(settings));
+}
+
+export function getStoredActiveRoom() {
+  return localStorage.getItem(LS_ACTIVE_ROOM) || 'OROKIN-7741';
+}
+
+export function saveStoredActiveRoom(roomCode) {
+  localStorage.setItem(LS_ACTIVE_ROOM, roomCode);
 }
