@@ -127,6 +127,7 @@ class WarframeSquadApp {
 
     // Companion Desktop Assistant Modal
     this.btnDownloadCompanion = document.getElementById('btnDownloadCompanion');
+    this.btnDownloadPowerShell = document.getElementById('btnDownloadPowerShell');
     this.companionModal = document.getElementById('companionModal');
     this.btnCloseCompanionModal = document.getElementById('btnCloseCompanionModal');
     this.btnCloseCompanionModalFooter = document.getElementById('btnCloseCompanionModalFooter');
@@ -198,6 +199,17 @@ class WarframeSquadApp {
     // Companion desktop assistant modal events
     if (this.btnDownloadCompanion) {
       this.btnDownloadCompanion.addEventListener('click', () => this.openCompanionModal());
+    }
+    if (this.btnDownloadPowerShell) {
+      this.btnDownloadPowerShell.addEventListener('click', () => {
+        const a = document.createElement('a');
+        a.href = 'sync-agent.ps1';
+        a.download = 'sync-agent.ps1';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        this.showToast('PowerShell Background Agent downloaded.', 'info');
+      });
     }
     if (this.btnCloseCompanionModal) {
       this.btnCloseCompanionModal.addEventListener('click', () => this.closeCompanionModal());
