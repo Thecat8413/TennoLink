@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Warframe Squad Relic Sync Engine | AlecaFrame Cloudflare Tool</title>
-  <meta name="description" content="Cross-squad Warframe relic sync engine using AlecaFrame public tokens. Target prime warframes and weapons, cross-reference fireteam stock, and calculate radiant trace budgets.">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'><path d='M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'/></svg>">
+  <title>Warframe Squad Relic Sync | Vitruvian Engine</title>
+  <meta name="description" content="Cross-squad Warframe relic sync engine using AlecaFrame public tokens. Target prime warframes and weapons, cross-reference fireteam stock, and calculate radiant trace budgets in Vitruvian Orokin aesthetic.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e5c577'><circle cx='12' cy='12' r='10' stroke='%23e5c577' stroke-width='2' fill='none'/><circle cx='12' cy='12' r='4' fill='%23e5c577'/></svg>">
   <link rel="stylesheet" href="src/css/main.css">
   <link rel="stylesheet" href="src/css/components.css">
 </head>
@@ -13,28 +13,43 @@
 
   <div class="app-container">
     
-    <!-- Top Navigation Bar -->
+    <!-- Top Navigation Bar (Compact Vitruvian) -->
     <header class="navbar">
       <div class="brand">
         <div class="brand-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gold">
-            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-            <polyline points="2 17 12 22 22 17"></polyline>
-            <polyline points="2 12 12 17 22 12"></polyline>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="4"></circle>
+            <line x1="12" y1="2" x2="12" y2="22"></line>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
           </svg>
         </div>
         <div>
-          <h1 class="brand-title"><span>OROKIN</span> RELIC SYNC</h1>
-          <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.15rem;">
-            <span class="brand-badge">AlecaFrame Sync</span>
-            <span style="font-size: 0.75rem; color: var(--text-faint);">Cloudflare Pages Edition</span>
-          </div>
+          <h1 class="brand-title"><span>VITRUVIAN</span> RELIC & MASTERY</h1>
         </div>
+        <span class="brand-badge">Engine</span>
+      </div>
+
+      <!-- Center View Switcher Tabs -->
+      <div class="view-tabs">
+        <button id="tabRelicEngine" class="view-tab active" title="Fireteam Relic Engine & Radshare Optimizer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="4"></circle>
+          </svg>
+          Relic Engine
+        </button>
+        <button id="tabMasteryAssistant" class="view-tab" title="Personal Mastery Dossier & Target Pursuer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          Mastery Assistant
+        </button>
       </div>
 
       <div class="nav-actions">
         <button id="btnLoadDemo" class="btn btn-secondary btn-sm" title="Populate 4-player demo squad for testing">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
             <circle cx="8.5" cy="7" r="4"></circle>
             <line x1="20" y1="8" x2="20" y2="14"></line>
@@ -43,64 +58,83 @@
           Demo Squad
         </button>
 
-        <button id="btnManageSquad" class="btn btn-secondary" title="Manage Fireteam Tokens">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button id="btnManageSquad" class="btn btn-secondary btn-sm" title="Manage Fireteam Tokens & Room PIN">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
             <circle cx="9" cy="7" r="4"></circle>
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
-          Manage Squad
+          Fireteam Room
         </button>
 
-        <button id="btnSyncSquad" class="btn btn-primary" title="Sync All Squad Relics from AlecaFrame">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button id="btnDownloadCompanion" class="btn btn-secondary btn-sm" title="Download Windows Background Assistant (.exe)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Assistant (.exe)
+        </button>
+
+        <button id="btnSyncSquad" class="btn btn-primary btn-sm" title="Sync All Squad Relics from AlecaFrame">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
           </svg>
-          Sync Squad
+          Sync Fireteam
         </button>
+
+        <!-- User Profile / 4-Digit PIN Login Area -->
+        <div id="userProfileArea">
+          <button id="btnOpenAuthModal" class="btn btn-secondary btn-sm" title="Sign in with Gamertag and 4-digit PIN">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            Sign In (PIN)
+          </button>
+        </div>
       </div>
     </header>
 
-    <!-- Fireteam Roster Bar -->
-    <section class="glass-panel squad-bar">
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <span style="font-family: var(--font-display); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gold-primary);">
-          Fireteam Roster
-        </span>
+    <!-- Relic Engine Primary View Container -->
+    <div id="relicEngineView">
+      <!-- Fireteam Roster Bar (Compact Ticker) -->
+      <section class="glass-panel squad-bar">
+      <div class="squad-roster-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+        </svg>
+        Fireteam:
       </div>
       <div id="squadRosterContainer" class="squad-roster">
         <!-- Rendered by app.js -->
       </div>
     </section>
 
-    <!-- Target Selection Deck -->
+    <!-- Target Selection Deck (High Density) -->
     <section class="target-section">
       <div class="glass-panel target-search-panel">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <label for="targetSearchInput" style="font-family: var(--font-display); font-weight: 700; font-size: 1rem; color: var(--text-main);">
-            Select Prime Target
-          </label>
-          <span style="font-size: 0.8rem; color: var(--text-faint);">Pick a weapon or frame to cross-reference stock</span>
-        </div>
-
         <div class="search-input-wrapper">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <input type="text" id="targetSearchInput" class="target-search-input" placeholder="Search Prime targets (e.g. Protea Prime, Glaive Prime, Gauss Prime...)" autocomplete="off">
+          <input type="text" id="targetSearchInput" class="target-search-input" placeholder="Search Prime target (e.g. Mesa, Protea, Glaive, Sevagoth, Xaku...)" autocomplete="off">
           
-          <!-- Dropdown Results -->
-          <div id="targetDropdownList" class="glass-panel" style="display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0; max-height: 280px; overflow-y: auto; z-index: 100;"></div>
+          <!-- Dropdown Results (Stacking-safe floating surface) -->
+          <div id="targetDropdownList" class="target-dropdown-results" style="display: none;"></div>
         </div>
 
         <div class="category-chips">
-          <button class="cat-chip active" data-category="All">All Items</button>
+          <button class="cat-chip active" data-category="All">All</button>
           <button class="cat-chip" data-category="Warframe">Warframes</button>
           <button class="cat-chip" data-category="Primary">Primary</button>
           <button class="cat-chip" data-category="Secondary">Secondary</button>
           <button class="cat-chip" data-category="Melee">Melee</button>
+          <button class="cat-chip" data-category="Companion">Companions</button>
+          <button class="cat-chip" data-category="Archwing">Archwing</button>
         </div>
       </div>
 
@@ -110,31 +144,31 @@
       </div>
     </section>
 
-    <!-- Radiant Trace Planner & Radshare Metrics Banner -->
+    <!-- Radiant Trace Planner & Radshare Metrics Banner (Compact Telemetry) -->
     <section class="glass-panel trace-planner-banner">
       <div class="planner-metric">
         <div class="metric-label">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
           </svg>
-          Immediate 4x Radshares Ready
+          4x Radshares Ready
         </div>
         <div class="metric-value-wrap">
           <span id="valRadsharesReady" class="metric-val gold">0</span>
-          <span class="metric-desc">Concurrent 4-player Radiant runs formable right now</span>
+          <span class="metric-desc">Concurrent 4-player runs ready</span>
         </div>
       </div>
 
       <div class="planner-metric">
         <div class="metric-label">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-cyan">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
           </svg>
-          Void Traces Needed (All Radiant)
+          Traces Needed (Radiant)
         </div>
         <div class="metric-value-wrap">
           <span id="valTotalTraces" class="metric-val cyan">0</span>
-          <span class="metric-desc">Total traces across squad to upgrade all matching stock</span>
+          <span class="metric-desc">Squad deficit for full upgrade</span>
         </div>
         <div id="memberTracesContainer" class="member-trace-breakdown">
           <!-- Rendered by app.js -->
@@ -143,41 +177,45 @@
 
       <div class="planner-metric">
         <div class="metric-label">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 6 12 12 14 14"></polyline>
           </svg>
-          Set Completion Odds
+          Full Set Drop Odds
         </div>
         <div class="metric-value-wrap">
           <span id="valDropOdds" class="metric-val violet">0%</span>
-          <span class="metric-desc">Estimated probability of obtaining all parts with squad pool</span>
+          <span class="metric-desc">Cumulative fireteam completion chance</span>
         </div>
       </div>
     </section>
 
-    <!-- Component & Relic Inventory Matrix -->
+    <!-- Component & Relic Inventory Matrix (Dense Vitruvian Tables) -->
     <main id="relicMatrixContainer">
       <!-- Rendered by app.js -->
     </main>
+  </div> <!-- End #relicEngineView -->
 
+  <!-- Personal Mastery Assistant View Container -->
+  <div id="masteryAssistantView" style="display: none;">
+    <!-- Rendered dynamically by MasteryController -->
   </div>
 
-  <!-- Squad Manager Modal -->
-  <div id="squadModal" class="modal-overlay">
+  </div> <!-- End .app-container -->
+
+  <!-- Tenno Sanctum Authentication Modal (Gamertag + 4-Digit PIN) -->
+  <div id="authModal" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
         <h2 class="modal-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
           </svg>
-          Fireteam Token Manager
+          Tenno Sanctum Authentication
         </h2>
-        <button id="btnCloseSquadModal" class="btn btn-secondary btn-icon-only">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button id="btnCloseAuthModal" class="btn btn-secondary btn-icon-only">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
@@ -185,23 +223,97 @@
       </div>
 
       <div class="modal-body">
+        <form id="formAuthLogin">
+          <div class="form-group">
+            <label class="form-label" for="inputAuthPlayerName">Gamertag / Tenno Identifier</label>
+            <input type="text" id="inputAuthPlayerName" class="form-input" placeholder="e.g. Player2, Alice, Excalibur..." required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="inputAuthPin">4-Digit Security PIN</label>
+            <input type="password" id="inputAuthPin" class="form-input pin-input" maxlength="4" pattern="[0-9]{4}" inputmode="numeric" placeholder="••••" required autocomplete="current-password">
+            <span class="form-helper">
+              Your 4-digit PIN secures your personal mastery records, owned prime components, and desktop companion sync.
+              If this is your first sign-in, this 4-digit PIN initializes your private vault.
+            </span>
+          </div>
+
+          <button type="submit" id="btnSubmitAuth" class="btn btn-primary" style="width: 100%; margin-top: 0.35rem;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+              <polyline points="10 17 15 12 10 7"></polyline>
+              <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+            Enter Sanctum ✦
+          </button>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('authModal').classList.remove('open')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Squad Manager Modal -->
+  <div id="squadModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          Fireteam Room & Token Manager
+        </h2>
+        <button id="btnCloseSquadModal" class="btn btn-secondary btn-icon-only">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Room Configuration & 4-Digit PIN -->
+        <div class="glass-panel" style="padding: 0.65rem; display: flex; flex-direction: column; gap: 0.45rem; background: rgba(0,0,0,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="form-label" style="margin: 0; color: var(--gold-primary);">Active Room Code</label>
+            <span id="labelCurrentRoom" style="font-family: var(--font-display); font-weight: 700; color: var(--text-main);">OROKIN-7741</span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem;">
+            <div class="form-group">
+              <label class="form-label" for="inputRoomCode">Room Code</label>
+              <input type="text" id="inputRoomCode" class="form-input" placeholder="e.g. VOID-42">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inputRoomPin">4-Digit Room PIN (Optional)</label>
+              <input type="password" id="inputRoomPin" class="form-input pin-input" maxlength="4" pattern="[0-9]{4}" placeholder="••••">
+            </div>
+          </div>
+          <button type="button" id="btnUpdateRoom" class="btn btn-secondary btn-xs" style="align-self: flex-end;">Set / Join Room</button>
+        </div>
+
         <!-- Add Member Form -->
         <form id="formAddMember">
-          <div class="form-group" style="margin-bottom: 1rem;">
+          <div class="form-group">
             <label class="form-label" for="inputMemberName">Squad Member Name / Gamertag</label>
             <input type="text" id="inputMemberName" class="form-input" placeholder="e.g. Alice (Host), Alex, Sam..." required>
           </div>
 
-          <div class="form-group" style="margin-bottom: 1rem;">
+          <div class="form-group">
             <label class="form-label" for="inputMemberToken">AlecaFrame Public Token</label>
-            <input type="text" id="inputMemberToken" class="form-input" placeholder="Paste Public Token from AlecaFrame app (Stats -> Create Public Link)" required>
+            <input type="text" id="inputMemberToken" class="form-input" placeholder="Paste Public Token from AlecaFrame (Stats -> Create Public Link)" required>
             <span class="form-helper">
               In AlecaFrame: Go to <strong>Stats</strong> &rarr; <strong>Create Public Link</strong> &rarr; ensure <strong>"Relics"</strong> is checked &rarr; <strong>Generate token</strong>.
             </span>
           </div>
 
-          <button type="submit" class="btn btn-primary" style="width: 100%;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.25rem;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
@@ -213,15 +325,135 @@
 
         <!-- Active Squad Members List -->
         <div>
-          <label class="form-label" style="margin-bottom: 0.75rem; display: block;">Active Fireteam Members</label>
+          <label class="form-label" style="margin-bottom: 0.5rem; display: block;">Active Fireteam Members</label>
           <div id="squadMemberListManage" class="member-list-manage">
             <!-- Rendered by app.js -->
           </div>
         </div>
       </div>
 
+  <!-- Companion Download & Setup Modal -->
+  <div id="companionModal" class="modal-overlay">
+    <div class="modal-card modal-card-lg">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <h2 class="modal-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            TennoRelicSync Assistant
+          </h2>
+          <span class="badge badge-gold" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">Windows x64 • Native Tray</span>
+        </div>
+        <button id="btnCloseCompanionModal" class="btn btn-secondary btn-icon-only">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Hero Summary Banner -->
+        <div class="glass-panel" style="padding: 0.75rem 1rem; background: linear-gradient(135deg, rgba(229,197,119,0.08) 0%, rgba(9,11,15,0.7) 100%); border-left: 3px solid var(--gold-primary);">
+          <div style="font-size: 0.85rem; font-weight: 600; color: var(--gold-primary); margin-bottom: 0.2rem;">
+            Set-and-Forget Background Relic & Mastery Sync
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+            TennoRelicSync lives in your Windows system tray, automatically detects changes to your inventory file as you play Warframe, and syncs your relics and mastery progress directly to this self-hosted server without ever opening a browser.
+          </div>
+        </div>
+
+        <!-- Download Cards Grid -->
+        <div class="companion-download-grid">
+          <a href="/TennoRelicSync.exe" download="TennoRelicSync.exe" class="companion-download-card" id="btnDownloadExe">
+            <div class="card-icon-area">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+            </div>
+            <div class="card-meta">
+              <div class="card-title">Download Executable (.exe)</div>
+              <div class="card-desc">Direct Standalone Binary • No installer needed</div>
+            </div>
+            <div class="card-size-badge">7.2 MB</div>
+          </a>
+
+          <a href="/TennoRelicSync.zip" download="TennoRelicSync.zip" class="companion-download-card" id="btnDownloadZip">
+            <div class="card-icon-area">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
+                <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                <rect x="1" y="3" width="22" height="5"></rect>
+                <line x1="10" y1="12" x2="14" y2="12"></line>
+              </svg>
+            </div>
+            <div class="card-meta">
+              <div class="card-title">Download Compressed (.zip)</div>
+              <div class="card-desc">Deflated Archive • Faster download</div>
+            </div>
+            <div class="card-size-badge">3.0 MB</div>
+          </a>
+        </div>
+
+        <!-- Supported Tools Badges -->
+        <div class="companion-sources-panel">
+          <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-bottom: 0.4rem;">
+            Auto-Detects Either Tool on your PC:
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+            <div class="source-item">
+              <div class="source-tag text-gold">WFHelper / API-Helper</div>
+              <div class="source-desc">Open-source & Linux/Proton compatible. Zero Overwolf. Reads <code>%APPDATA%\WFHelper\api-helper\inventory.json</code>.</div>
+            </div>
+            <div class="source-item">
+              <div class="source-tag text-gold">AlecaFrame</div>
+              <div class="source-desc">Standard Overwolf app. Reads and decrypts <code>%LOCALAPPDATA%\AlecaFrame\lastData.dat</code> automatically.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1-Click Config Generator Box -->
+        <div class="glass-panel" style="padding: 0.65rem 0.85rem; background: rgba(0,0,0,0.35);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <span style="font-size: 0.78rem; font-weight: 600; color: var(--gold-primary);">Pre-Configured Setup File</span>
+            <button type="button" id="btnDownloadConfigJson" class="btn btn-secondary btn-xs">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Download config.json
+            </button>
+          </div>
+          <div style="font-size: 0.72rem; color: var(--text-faint); margin-bottom: 0.4rem;">
+            Drop this <code>config.json</code> next to <code>TennoRelicSync.exe</code>, or right-click the tray icon and select "Edit Config" to modify it:
+          </div>
+          <pre id="companionConfigPreview" style="margin: 0; padding: 0.45rem 0.65rem; background: rgba(0,0,0,0.6); border: 1px solid var(--border-glass); border-radius: var(--radius-xs); font-size: 0.72rem; color: var(--gold-subtle); overflow-x: auto;"></pre>
+        </div>
+
+        <!-- Quick 3-Step Setup -->
+        <div class="companion-steps">
+          <div class="step-row">
+            <span class="step-num">1</span>
+            <span class="step-text">Download <strong>TennoRelicSync.exe</strong> and save anywhere (e.g. <code>C:\Games\TennoRelicSync\</code>).</span>
+          </div>
+          <div class="step-row">
+            <span class="step-num">2</span>
+            <span class="step-text">Double-click to start. The app docks into your Windows System Tray (near the clock).</span>
+          </div>
+          <div class="step-row">
+            <span class="step-num">3</span>
+            <span class="step-text">Done! Whenever you farm relics or level mastery in Warframe, your room is synced instantly.</span>
+          </div>
+        </div>
+      </div>
+
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" onclick="document.getElementById('squadModal').classList.remove('open')">Close</button>
+        <button type="button" id="btnCloseCompanionModalFooter" class="btn btn-secondary btn-sm">Close</button>
       </div>
     </div>
   </div>

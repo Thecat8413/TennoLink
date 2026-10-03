@@ -1,63 +1,72 @@
 /* 
  * Warframe Squad Relic Sync Engine - Main Design Tokens & Layout
- * Aesthetic: Orokin Prime Void Elegance (Sleek Dark, Gold & Cyan Accents, Glassmorphism)
+ * Aesthetic: Vitruvian Orokin Archives (The Sacrifice Theme)
+ * Deep charcoal obsidian, Vitruvian gold hairline trims, parchment typography, high-density layout
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Core Palette */
-  --bg-space: #07090e;
-  --bg-void: #0d111a;
-  --bg-card: rgba(17, 24, 39, 0.75);
-  --bg-card-hover: rgba(26, 36, 56, 0.85);
-  --bg-glass: rgba(13, 17, 26, 0.65);
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --border-gold: rgba(245, 158, 11, 0.35);
-  --border-cyan: rgba(0, 229, 255, 0.35);
+  /* Vitruvian Core Palette */
+  --bg-space: #0c0e12;
+  --bg-void: #11141a;
+  --bg-card: rgba(17, 21, 28, 0.85);
+  --bg-card-hover: rgba(24, 29, 39, 0.92);
+  --bg-card-inset: rgba(10, 12, 16, 0.75);
+  --bg-glass: rgba(15, 18, 24, 0.78);
+  
+  /* Vitruvian Borders */
+  --border-glass: rgba(229, 197, 119, 0.12);
+  --border-gold: rgba(229, 197, 119, 0.28);
+  --border-gold-subtle: rgba(229, 197, 119, 0.16);
+  --border-focus: #e5c577;
 
-  /* Warframe Orokin Accents */
-  --gold-primary: #f59e0b;
-  --gold-glow: #fbbf24;
-  --gold-dark: #b45309;
-  --cyan-primary: #00e5ff;
-  --cyan-glow: #38bdf8;
-  --violet-lotus: #d946ef;
-  --emerald-prime: #10b981;
-  --crimson-alert: #ef4444;
+  /* Vitruvian Orokin Accents */
+  --gold-primary: #e5c577;
+  --gold-glow: #f5e2a3;
+  --gold-dark: #a88139;
+  --bronze-accent: #c99b5d;
+  --bronze-dark: #78613e;
+  --argent-celestine: #9db4c0;
+  --jade-prime: #87aa8e;
+  --crimson-alert: #d45353;
 
-  /* Relic Era Colors */
-  --era-lith: #94a3b8;
-  --era-meso: #38bdf8;
-  --era-neo: #eab308;
-  --era-axi: #f97316;
-  --era-requiem: #dc2626;
+  /* Relic Era Colors (Vitruvian Antiqued Scheme) */
+  --era-lith: #a69177;
+  --era-meso: #94a9b8;
+  --era-neo: #cda35b;
+  --era-axi: #e5c577;
+  --era-requiem: #b84747;
 
   /* Refinement Tiers */
-  --ref-intact: #94a3b8;
-  --ref-exceptional: #10b981;
-  --ref-flawless: #00e5ff;
-  --ref-radiant: #c084fc;
+  --ref-intact: #948a7b;
+  --ref-exceptional: #87aa8e;
+  --ref-flawless: #9db4c0;
+  --ref-radiant: #f3d88b;
 
   /* Typography */
+  --font-orokin: 'Cinzel', serif;
   --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Text Colors */
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-faint: #64748b;
-  --text-gold: #fde68a;
+  /* Parchment Text Colors */
+  --text-main: #f5efe6;
+  --text-muted: #b5aba0;
+  --text-faint: #756d61;
+  --text-gold: #f5e2a3;
+  --text-gold-dim: #c7a760;
 
   /* Shadows & Glows */
-  --glow-gold: 0 0 25px rgba(245, 158, 11, 0.25);
-  --glow-cyan: 0 0 25px rgba(0, 229, 255, 0.25);
-  --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  --glow-gold: 0 0 16px rgba(229, 197, 119, 0.18);
+  --glow-gold-sm: 0 0 8px rgba(229, 197, 119, 0.25);
+  --shadow-card: 0 6px 20px -4px rgba(0, 0, 0, 0.65);
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
+  /* Compact Radii */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 7px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
 }
 
 *, *::before, *::after {
@@ -69,175 +78,206 @@
 body {
   background-color: var(--bg-space);
   background-image: 
-    radial-gradient(circle at 15% 15%, rgba(0, 229, 255, 0.05) 0%, transparent 40%),
-    radial-gradient(circle at 85% 25%, rgba(245, 158, 11, 0.06) 0%, transparent 45%),
-    linear-gradient(180deg, rgba(7, 9, 14, 0.98) 0%, var(--bg-space) 100%);
+    radial-gradient(circle at 18% 12%, rgba(229, 197, 119, 0.04) 0%, transparent 45%),
+    radial-gradient(circle at 82% 28%, rgba(201, 155, 93, 0.035) 0%, transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(229, 197, 119, 0.02) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(12, 14, 18, 0.98) 0%, var(--bg-space) 100%);
   background-attachment: fixed;
   color: var(--text-main);
   font-family: var(--font-body);
-  line-height: 1.6;
+  font-size: 13.5px;
+  line-height: 1.5;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Base Container */
-.app-container {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 1.5rem 2rem 4rem;
+/* Vitruvian Geometric Watermark (Subtle Da Vinci / Orokin Astrolabe Arcs) */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 50% 30%, transparent 280px, rgba(229, 197, 119, 0.015) 281px, transparent 282px),
+    radial-gradient(circle at 50% 30%, transparent 450px, rgba(229, 197, 119, 0.012) 451px, transparent 452px),
+    linear-gradient(to right, transparent 49.9%, rgba(229, 197, 119, 0.012) 50%, transparent 50.1%);
+  pointer-events: none;
+  z-index: 0;
 }
 
-/* Glassmorphism Card Style */
+/* Base Compact Container */
+.app-container {
+  max-width: 1420px;
+  margin: 0 auto;
+  padding: 0.65rem 1rem 2.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Glassmorphism Card Style - Vitruvian Hairline Borders */
 .glass-panel {
   background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--radius-lg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-gold-subtle);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
 }
 
 .glass-panel:hover {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(229, 197, 119, 0.25);
 }
 
-/* Header & Navigation Bar */
+/* Compact Vitruvian Header & Navbar */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid var(--border-glass);
+  padding: 0.45rem 0.85rem;
+  margin-bottom: 0.65rem;
+  border: 1px solid var(--border-gold-subtle);
   background: var(--bg-glass);
-  backdrop-filter: blur(20px);
-  border-radius: var(--radius-lg);
+  backdrop-filter: blur(16px);
+  border-radius: var(--radius-md);
+  min-height: 46px;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
+  gap: 0.65rem;
 }
 
 .brand-icon {
-  width: 42px;
-  height: 42px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(0, 229, 255, 0.2));
+  background: rgba(229, 197, 119, 0.08);
   border: 1px solid var(--gold-primary);
-  border-radius: var(--radius-md);
-  box-shadow: var(--glow-gold);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--glow-gold-sm);
+}
+
+.brand-icon svg {
+  width: 18px;
+  height: 18px;
 }
 
 .brand-title {
   font-family: var(--font-display);
-  font-size: 1.45rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--text-main);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  line-height: 1.1;
 }
 
 .brand-title span {
-  background: linear-gradient(135deg, var(--gold-primary), var(--cyan-primary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--gold-primary);
+  font-family: var(--font-orokin);
+  letter-spacing: 0.1em;
 }
 
 .brand-badge {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
   text-transform: uppercase;
-  padding: 0.2rem 0.55rem;
-  background: rgba(0, 229, 255, 0.15);
-  border: 1px solid var(--cyan-primary);
-  color: var(--cyan-primary);
-  border-radius: 9999px;
-  letter-spacing: 0.05em;
+  padding: 0.1rem 0.4rem;
+  background: rgba(229, 197, 119, 0.1);
+  border: 1px solid rgba(229, 197, 119, 0.3);
+  color: var(--gold-primary);
+  border-radius: var(--radius-xs);
+  letter-spacing: 0.06em;
 }
 
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.45rem;
 }
 
-/* Buttons */
+/* Vitruvian Compact Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.25rem;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
   font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
   white-space: nowrap;
+  letter-spacing: 0.02em;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--gold-primary), #d97706);
-  color: #000;
-  border-color: var(--gold-glow);
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg, #e5c577 0%, #c99b5d 100%);
+  color: #12141a;
+  border-color: #f5e2a3;
+  box-shadow: 0 2px 8px rgba(229, 197, 119, 0.25);
+  font-weight: 700;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, var(--gold-glow), var(--gold-primary));
-  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+  background: linear-gradient(135deg, #f5e2a3 0%, #e5c577 100%);
+  box-shadow: 0 3px 12px rgba(229, 197, 119, 0.4);
   transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-main);
-  border-color: var(--border-glass);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
+  border-color: var(--border-gold-subtle);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(229, 197, 119, 0.08);
+  border-color: var(--gold-primary);
+  color: var(--text-main);
   transform: translateY(-1px);
 }
 
 .btn-cyan {
-  background: linear-gradient(135deg, rgba(0, 229, 255, 0.15), rgba(0, 229, 255, 0.05));
-  color: var(--cyan-primary);
-  border-color: var(--cyan-primary);
-  box-shadow: 0 4px 14px rgba(0, 229, 255, 0.2);
+  background: rgba(229, 197, 119, 0.08);
+  color: var(--gold-primary);
+  border-color: var(--gold-primary);
 }
 
 .btn-cyan:hover {
-  background: var(--cyan-primary);
-  color: #000;
-  box-shadow: var(--glow-cyan);
+  background: var(--gold-primary);
+  color: #10131a;
+  box-shadow: var(--glow-gold-sm);
   transform: translateY(-1px);
 }
 
 .btn-sm {
-  padding: 0.4rem 0.85rem;
-  font-size: 0.8rem;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.75rem;
 }
 
 .btn-icon-only {
-  padding: 0.6rem;
+  padding: 0.35rem;
   border-radius: var(--radius-sm);
 }
 
 /* Animations */
 @keyframes pulseGlow {
-  0%, 100% { opacity: 0.6; }
+  0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
 }
 
@@ -250,23 +290,43 @@ body {
   animation: spin 1s linear infinite;
 }
 
+/* Vitruvian Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f1217;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(229, 197, 119, 0.25);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-primary);
+}
+
 /* Utilities */
 .text-gold { color: var(--gold-primary); }
-.text-cyan { color: var(--cyan-primary); }
 .text-muted { color: var(--text-muted); }
+.text-faint { color: var(--text-faint); }
 .font-display { font-family: var(--font-display); }
+.font-orokin { font-family: var(--font-orokin); }
 
 /* Responsive adjustments */
 @media (max-width: 900px) {
   .app-container {
-    padding: 1rem 1rem 3rem;
+    padding: 0.5rem 0.65rem 2rem;
   }
   .navbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
   .nav-actions {
+    width: 100%;
     justify-content: flex-end;
   }
 }

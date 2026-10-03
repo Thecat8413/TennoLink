@@ -1,74 +1,111 @@
-# Warframe Squad Relic Sync Engine
+# Warframe Squad Relic Sync & Mastery Engine (Self-Hosted Edition)
 
-> A cross-squad Warframe relic synchronization engine and radshare planner built for **Cloudflare Pages** using **AlecaFrame Public Tokens**.
-
----
-
-## 🎯 Features
-
-1. **Target Any Prime Warframe or Weapon:**
-   - Instant search and category filtering (*Warframes, Primaries, Secondaries, Melees*).
-   - Component recipe breakdown (Blueprints, Chassis, Neuroptics, Systems, Barrels, Receivers, Blades, etc.).
-   - Vault status indicators (*Vaulted* vs *Active Drop*).
-
-2. **Cross-Fireteam Relic Stock Matrix:**
-   - Each squad member inputs their AlecaFrame Public Token (stored locally in browser `localStorage`).
-   - Relic inventories are parsed from the AlecaFrame binary stream and cached asynchronously in `IndexedDB`.
-   - Grid breakdown showing each member's holdings across all refinement tiers:
-     - ⚪ **Intact**
-     - 🟢 **Exceptional**
-     - 🔵 **Flawless**
-     - 🟣 **Radiant**
-
-3. **Void Trace Budget & Radshare Calculator:**
-   - **Immediate Radshares Formable:** Identifies how many concurrent 4-player Radiant runs the squad can form immediately.
-   - **Trace Deficit Shopping List:** Calculates the exact Void Trace bill per squad member to refine their intact stock to Radiant (100 traces per Intact).
-   - **Binomial Drop Probability:** Statistical likelihood of securing the target part with the squad's relic pool.
-
-4. **Cloudflare Pages Edge Proxy (`/functions/api/alecaframe.js`):**
-   - Resolves browser CORS blocks to `stats.alecaframe.com`.
-   - Edge-caches responses for 60 seconds to protect against AlecaFrame's strict 1 request/second per IP rate limit.
-
-5. **Demo Fireteam Included:**
-   - 1-click **"Demo Squad"** button to immediately preview and test the full squad matrix with 4 sample Tenno profiles without needing real tokens upfront.
+> A high-performance, self-hosted Warframe relic synchronization engine, radshare optimizer, and persistent mastery tracker. Built with a sleek **Vitruvian Orokin aesthetic**, running on **Docker Compose** with persistent **SQLite storage**.
 
 ---
 
-## 🚀 Local Development & Deployment
+## 🏛️ Key Features
 
-### Run Locally with Wrangler
+1. **Vitruvian Orokin Interface:**
+   - Authentic *The Sacrifice* aesthetic featuring warm obsidian backgrounds, hairline gold filigree, parchment typography, and compact high-density tables.
+   - Clean, low-scroll layout designed for multi-monitor setups and quick in-mission glanceability.
+
+2. **Self-Hosted & Private-First (Docker Compose):**
+   - **Zero Cloud Lock-in**: Run completely on your own homelab, server, or VPS.
+   - **Long-Term Data Persistence**: Persistent SQLite database (`./data/warframe.db`) preserves player profiles, historical mastery, and squad inventories permanently.
+   - **LAN & WireGuard VPN Ready**: Operate strictly on your private local network or WireGuard mesh without exposing any ports to the public internet.
+   - **Reverse Proxy Friendly**: Drop directly behind Caddy, Traefik, Nginx, or Nginx Proxy Manager with SSL termination.
+
+3. **AlecaFrame `lastData.dat` Auto-Sync:**
+   - Native support for AlecaFrame's local `%LOCALAPPDATA%\AlecaFrame\lastData.dat` file.
+   - Decrypts standard AES-128-CBC and applies **Zero-Knowledge Sanitization**—extracts *only* Mastery XP and Relic quantities while purging all personal tokens, Platinum, and Credit balances.
+   - Background PowerShell companion script (`scripts/sync-agent.ps1`) automatically syncs inventories whenever missions conclude.
+
+4. **Persistent Mastery Rank Tracker:**
+   - Tracks equipment XP and Mastery completion across Warframes, Primaries, Secondaries, Melees, Companions, Archwings, and Necramechs.
+   - Historical records survive server restarts and browser cache clears.
+
+5. **Complete Prime Source of Truth Catalog:**
+   - 145+ Prime items imported locally across all categories (Warframes, Weapons, Companions, Archwings).
+   - Real-time **Warframe.Market v2 pricing** for sets and individual components with local persistent caching.
+   - Canonical speed-farming nodes (Hepit, Ukko, Apollo Lua 4-3-2-1 strategy) and Vault status.
+
+6. **Cross-Fireteam Relic Stock Matrix:**
+   - Synchronize up to 4 fireteam members in a shared squad room.
+   - Immediate detection of formable 4-player Radshares.
+   - Calculates the exact Void Trace bill per squad member to refine stock to Radiant.
+
+---
+
+## 🚀 Quick Start with Docker Compose
+
+### 1. Launch the Stack
 ```bash
-# Start local Cloudflare Pages environment (with Functions support)
-npx wrangler pages dev .
+# Clone the repository
+git clone https://github.com/Thecat8413/warframe-helper.git
+cd warframe-helper
+
+# (Optional) Customize environment
+cp .env.example .env
+
+# Start with Docker Compose
+docker compose up -d
 ```
 
-Then open `http://localhost:8788` in your browser.
-
-### Deploy to Cloudflare Pages
-1. Push this repository to GitHub or GitLab.
-2. In the **Cloudflare Dashboard**, navigate to **Compute (Workers) > Pages**.
-3. Select **Connect to Git** and choose this repository.
-4. **Build Settings:**
-   - **Framework Preset:** *None*
-   - **Build command:** *(leave empty)*
-   - **Build output directory:** `.` (root directory)
-5. Click **Save and Deploy**. Cloudflare automatically activates both the static site and the edge function in `/functions`.
+Open your browser to:
+**`http://localhost:3000`** (or your server's LAN / WireGuard IP).
 
 ---
 
-## 🔑 How to Generate AlecaFrame Public Tokens
+## ⚙️ Configuration & Environment
 
-1. Open the **AlecaFrame** desktop app (running via Overwolf).
-2. Go to the **Stats** tab.
-3. Click **"Create Public Link"**.
-4. Check the **"Relics"** option (and any other statistics you wish to share).
-5. Click **"Generate token"**.
-6. Copy the token into this web tool via **Manage Squad &rarr; Add Member**.
+Configuration options in `.env`:
 
-*Tokens are valid for 1 year, preserve user privacy, and can be revoked at any time inside the AlecaFrame app.*
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `PORT` | `3000` | Host port exposed by Docker container. |
+| `HOST_BIND_IP` | `0.0.0.0` | IP to bind on host (`127.0.0.1` for reverse proxy, `0.0.0.0` for LAN/WireGuard). |
+| `DATA_DIR` | `/app/data` | Container path for the persistent SQLite database. |
+| `NODE_ENV` | `production` | Environment mode. |
 
 ---
 
-## 🔮 Roadmap: Dual-Function Expansion
-- **Phase 1 (Current):** Cross-Squad Relic Sync Engine via Public Tokens.
-- **Phase 2 (Planned):** Full Mastery Management Tool utilizing automatic local network synchronization for `%localappdata%/AlecaFrame/lastData.dat` without exposing raw local files over the public internet.
+## 🔒 Reverse Proxy & WireGuard Setup
+
+### A. Caddy
+```caddy
+warframe.myhome.net {
+    reverse_proxy 127.0.0.1:3000
+}
+```
+
+### B. Nginx / Nginx Proxy Manager
+Forward incoming requests to `http://127.0.0.1:3000` with `client_max_body_size 10M;`. Full example in [docs/reverse-proxy.md](docs/reverse-proxy.md).
+
+### C. Local LAN / WireGuard Only
+In `.env`, set `HOST_BIND_IP=0.0.0.0`. Teammates on your WireGuard network connect directly to `http://10.x.x.x:3000`.
+
+---
+
+## 🔄 AlecaFrame Auto-Sync Companion
+
+To automatically sync your local inventory from your gaming PC to your self-hosted server:
+
+```powershell
+# In PowerShell on your gaming PC:
+.\scripts\sync-agent.ps1 -ServerUrl "https://warframe.myhome.net" -PlayerName "YourGamertag" -RoomCode "OROKIN-42"
+```
+
+The script watches `%LOCALAPPDATA%\AlecaFrame\lastData.dat` and automatically posts sanitized updates whenever your inventory changes.
+
+---
+
+## 🛠️ Native Node.js Run (Without Docker)
+
+You can also run natively on any machine with Node.js 22+:
+
+```bash
+# Start the server
+npm start
+```
+The server will initialize the SQLite database at `./data/warframe.db` and listen on port `3000`.
