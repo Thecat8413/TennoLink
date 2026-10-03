@@ -45,6 +45,32 @@ class WarframeSquadApp {
     }
 
     this.attachEventListeners();
+    this.startBackgroundSync();
+  }
+
+  startBackgroundSync() {
+    // Poll the room sync endpoint every 15 seconds
+    setInterval(async () => {
+      if (!this.activeRoom) return;
+      const changed = await this.squadManager.syncRoomMembers(this.activeRoom);
+      if (changed) {
+        await this.refreshSquadData();
+        this.render();
+        this.renderSquadModalManageList();
+      }
+    }, 15000);
+    
+    // Initial fetch
+    setTimeout(async () => {
+      if (this.activeRoom) {
+        const changed = await this.squadManager.syncRoomMembers(this.activeRoom);
+        if (changed) {
+          await this.refreshSquadData();
+          this.render();
+          this.renderSquadModalManageList();
+        }
+      }
+    }, 1000);
   }
 
   initElements() {
