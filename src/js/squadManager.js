@@ -165,6 +165,69 @@ export class SquadManager {
   }
 
   /**
+   * Fetch all room members from the server and merge them into the local squad
+   * @param {string} roomCode
+   */
+  async syncRoomMembers(roomCode) {
+    if (!roomCode) return;
+    try {
+      const response = await fetch(`/api/room/sync?room=${encodeURIComponent(roomCode)}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      if (!data.ok || !data.members) return;
+
+      let changed = false;
+      for (const remoteMember of data.members) {
+        // Skip if this is the current player to avoid echoing local data back
+        const currentActivePlayer = window.localStorage.getItem('wf_tenno_session') 
+          ? JSON.parse(window.localStorage.getItem('wf_tenno_session')).playerName
+          : null;
+        if (currentActivePlayer && currentActivePlayer.toLowerCase() === remoteMember.playerName.toLowerCase()) continue;
+
+        let localMember = this.members.find(m => m.name.toLowerCase() === remoteMember.playerName.toLowerCase());
+        
+        // If we have a newer sync locally, skip
+        if (localMember && localMember.lastSync && new Date(localMember.lastSync) >= new Date(remoteMember.updatedAt)) {
+          continue;
+        }
+
+        if (!localMember) {
+          const colorIndex = this.members.length % SQUAD_COLORS.length;
+          localMember = {
+            id: `member_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+            name: remoteMember.playerName,
+            token: 'room_sync',
+            isMock: false,
+            color: SQUAD_COLORS[colorIndex],
+            totalRelics: 0,
+            lastSync: remoteMember.updatedAt,
+            syncStatus: 'synced',
+            error: null
+          };
+          this.members.push(localMember);
+        }
+
+        await saveMemberRelics(localMember.id, remoteMember.relics);
+        const totalCount = remoteMember.relics.reduce((sum, r) => sum + (r.count || 1), 0);
+        
+        localMember.totalRelics = totalCount;
+        localMember.lastSync = remoteMember.updatedAt;
+        localMember.syncStatus = 'synced';
+        localMember.error = null;
+        changed = true;
+      }
+
+      if (changed) {
+        saveStoredSquadMembers(this.members);
+      }
+      return changed;
+    } catch (err) {
+      console.error('Failed to sync room members:', err);
+      return false;
+    }
+  }
+
+  /**
    * Retrieve all squad inventories from IndexedDB
    * @returns {Promise<Record<string, Array>>}
    */
