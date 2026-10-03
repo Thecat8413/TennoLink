@@ -115,66 +115,77 @@ func getInventoryFilePath() (string, string) {
 	appData := os.Getenv("APPDATA")
 	homeDir, _ := os.UserHomeDir()
 
-	// 1. Check AlecaFrame lastData.dat
-	var datPath string
-	var datStat os.FileInfo
-	var datErr error = os.ErrNotExist
-
-	if localAppData != "" {
-		datPath = filepath.Join(localAppData, "AlecaFrame", "lastData.dat")
-		datStat, datErr = os.Stat(datPath)
+	var candidates []struct {
+		path string
+		src  string
 	}
 
-	// 2. Check WFHelper and warframe-api-helper inventory.json locations
-	var jsonCandidates []string
+	if localAppData != "" {
+		candidates = append(candidates, struct{ path, src string }{filepath.Join(localAppData, "AlecaFrame", "lastData.dat"), "alecaframe"})
+		candidates = append(candidates, struct{ path, src string }{filepath.Join(localAppData, "WFHelper", "api-helper", "inventory.json"), "json"})
+		candidates = append(candidates, struct{ path, src string }{filepath.Join(localAppData, "WFHelper", "inventory.json"), "json"})
+		candidates = append(candidates, struct{ path, src string }{filepath.Join(localAppData, "Warframe", "inventory.json"), "json"})
+	}
 
 	if appData != "" {
-		jsonCandidates = append(jsonCandidates,
-			filepath.Join(appData, "WFHelper", "api-helper", "inventory.json"),
-			filepath.Join(appData, "WFHelper", "inventory.json"),
-			filepath.Join(appData, "wfhelper", "inventory.json"),
-		)
-	}
-
-	if localAppData != "" {
-		jsonCandidates = append(jsonCandidates,
-			filepath.Join(localAppData, "WFHelper", "api-helper", "inventory.json"),
-			filepath.Join(localAppData, "WFHelper", "inventory.json"),
-			filepath.Join(localAppData, "Warframe", "inventory.json"),
-		)
+		candidates = append(candidates, struct{ path, src string }{filepath.Join(appData, "WFHelper", "api-helper", "inventory.json"), "json"})
+		candidates = append(candidates, struct{ path, src string }{filepath.Join(appData, "WFHelper", "inventory.json"), "json"})
+		candidates = append(candidates, struct{ path, src string }{filepath.Join(appData, "wfhelper", "inventory.json"), "json"})
 	}
 
 	if homeDir != "" {
-		jsonCandidates = append(jsonCandidates,
-			filepath.Join(homeDir, ".config", "WFHelper", "api-helper", "inventory.json"),
-			filepath.Join(homeDir, ".config", "wfhelper", "inventory.json"),
+		candidates = append(candidates, struct{ path, src string }{filepath.Join(homeDir, ".config", "WFHelper", "api-helper", "inventory.json"), "json"})
+		candidates = append(candidates, struct{ path, src string }{filepath.Join(homeDir, ".config", "wfhelper", "inventory.json"), "json"})
+	}
+
+	candidates = append(candidates, struct{ path, src string }{"inventory.json", "json"})
+
+	var bestPath string
+	var bestSrc string
+	var bestTime time.Time
+
+	for _, c := range candidates {
+		if stat, err := os.Stat(c.path); err == nil {
+			if bestPath == "" || stat.ModTime().After(bestTime) {
+				bestPath = c.path
+				bestSrc = c.src
+				bestTime = stat.ModTime()
+			}
+		}
+	}
+
+	return bestPath, bestSrc
+}
+
+func getAllCandidateDirectories() []string {
+	localAppData := os.Getenv("LOCALAPPDATA")
+	appData := os.Getenv("APPDATA")
+	homeDir, _ := os.UserHomeDir()
+
+	var dirs []string
+	if localAppData != "" {
+		dirs = append(dirs,
+			filepath.Join(localAppData, "AlecaFrame"),
+			filepath.Join(localAppData, "WFHelper", "api-helper"),
+			filepath.Join(localAppData, "WFHelper"),
+			filepath.Join(localAppData, "Warframe"),
 		)
 	}
-
-	jsonCandidates = append(jsonCandidates, "inventory.json")
-
-	var latestJson string
-	var latestJsonStat os.FileInfo
-	for _, p := range jsonCandidates {
-		if stat, err := os.Stat(p); err == nil {
-			latestJson = p
-			latestJsonStat = stat
-			break
-		}
+	if appData != "" {
+		dirs = append(dirs,
+			filepath.Join(appData, "WFHelper", "api-helper"),
+			filepath.Join(appData, "WFHelper"),
+			filepath.Join(appData, "wfhelper"),
+		)
 	}
-
-	if datErr == nil && latestJson != "" {
-		if datStat.ModTime().After(latestJsonStat.ModTime()) {
-			return datPath, "alecaframe"
-		}
-		return latestJson, "json"
-	} else if datErr == nil {
-		return datPath, "alecaframe"
-	} else if latestJson != "" {
-		return latestJson, "json"
+	if homeDir != "" {
+		dirs = append(dirs,
+			filepath.Join(homeDir, ".config", "WFHelper", "api-helper"),
+			filepath.Join(homeDir, ".config", "wfhelper"),
+		)
 	}
-
-	return datPath, "alecaframe"
+	dirs = append(dirs, ".")
+	return dirs
 }
 
 func onReady() {
@@ -222,12 +233,6 @@ func onExit() {
 }
 
 func watchFile() {
-	invPath, _ := getInventoryFilePath()
-	if invPath == "" {
-		return
-	}
-
-	dir := filepath.Dir(invPath)
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Printf("Watcher error: %v", err)
@@ -235,7 +240,21 @@ func watchFile() {
 	}
 	defer watcher.Close()
 
-	watcher.Add(dir)
+	// Watch all existing candidate directories
+	dirs := getAllCandidateDirectories()
+	watchedCount := 0
+	for _, d := range dirs {
+		if stat, err := os.Stat(d); err == nil && stat.IsDir() {
+			watcher.Add(d)
+			watchedCount++
+		}
+	}
+
+	if watchedCount == 0 {
+		log.Printf("No valid inventory directories exist yet.")
+	} else {
+		log.Printf("Watching %d potential inventory directories...", watchedCount)
+	}
 
 	var debounceTimer *time.Timer
 
@@ -245,8 +264,8 @@ func watchFile() {
 			if !ok {
 				return
 			}
-			activePath, _ := getInventoryFilePath()
-			if filepath.Clean(event.Name) == filepath.Clean(activePath) {
+			name := strings.ToLower(filepath.Base(event.Name))
+			if name == "lastdata.dat" || name == "inventory.json" {
 				if event.Has(fsnotify.Write) || event.Has(fsnotify.Create) {
 					if debounceTimer != nil {
 						debounceTimer.Stop()
