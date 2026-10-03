@@ -1,0 +1,16 @@
+# Cloudflare Assets Ignore
+# Exclude backend files, node_modules, and git directories from static assets upload
+
+node_modules/
+.git/
+.github/
+.wrangler/
+companion/
+server/
+data/
+Dockerfile
+docker-compose.yml
+.dockerignore
+.env*
+docs/
+scripts/
