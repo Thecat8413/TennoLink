@@ -8,12 +8,12 @@
     "start": "node server/index.js",
     "server": "node server/index.js",
     "dev": "node server/index.js",
-    "deploy": "npx wrangler pages deploy .",
-    "pages:dev": "npx wrangler pages dev .",
-    "pages:deploy": "npx wrangler pages deploy ."
+    "deploy": "wrangler deploy",
+    "pages:dev": "wrangler pages dev .",
+    "pages:deploy": "wrangler pages deploy ."
   },
   "devDependencies": {
-    "wrangler": "^3.114.0"
+    "wrangler": "^4.0.0"
   },
   "keywords": [
     "warframe",
