@@ -320,7 +320,36 @@
             <!-- Rendered by app.js -->
           </div>
         </div>
+
+        <!-- Direct File Upload Alternative for Squad -->
+        <div class="glass-panel" style="padding: 0.75rem; background: rgba(229,197,119,0.04); border: 1px dashed var(--border-gold-subtle); border-radius: var(--radius-sm); margin-top: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <span style="font-size: 0.78rem; font-weight: 600; color: var(--gold-primary);">Direct File Sync (Zero Install)</span>
+            <span class="badge badge-gold" style="font-size: 0.65rem;">100% AV-Safe</span>
+          </div>
+          <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+            Upload <code>lastData.dat</code> (AlecaFrame) or <code>inventory.json</code> (WFHelper) for any player:
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <input type="text" id="inputSquadUploadPlayer" class="form-input" placeholder="Gamertag" style="max-width: 130px; font-size: 0.75rem;">
+            <input type="file" id="inputSquadFileDrop" accept=".dat,.json" style="display: none;">
+            <button type="button" id="btnTriggerSquadUpload" class="btn btn-secondary btn-sm" style="flex: 1;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              Select .dat / .json File
+            </button>
+          </div>
+        </div>
       </div>
+
+      <div class="modal-footer">
+        <button type="button" id="btnCloseSquadModalFooter" class="btn btn-secondary btn-sm">Close</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Companion Download & Setup Modal -->
   <div id="companionModal" class="modal-overlay">
@@ -333,9 +362,9 @@
               <line x1="8" y1="21" x2="16" y2="21"></line>
               <line x1="12" y1="17" x2="12" y2="21"></line>
             </svg>
-            TennoRelicSync Assistant
+            Relic & Mastery Sync Assistant
           </h2>
-          <span class="badge badge-gold" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">Windows x64 • Native Tray</span>
+          <span class="badge badge-gold" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">v1.0 • Multi-Sync</span>
         </div>
         <button id="btnCloseCompanionModal" class="btn btn-secondary btn-icon-only">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -345,71 +374,124 @@
         </button>
       </div>
 
-      <div class="modal-body">
-        <!-- Hero Summary Banner -->
-        <div class="glass-panel" style="padding: 0.75rem 1rem; background: linear-gradient(135deg, rgba(229,197,119,0.08) 0%, rgba(9,11,15,0.7) 100%); border-left: 3px solid var(--gold-primary);">
-          <div style="font-size: 0.85rem; font-weight: 600; color: var(--gold-primary); margin-bottom: 0.2rem;">
-            Set-and-Forget Background Relic & Mastery Sync
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 0.85rem;">
+        <!-- Sync Method 1: Web Dropzone (Zero-Install, 100% AV-Safe) -->
+        <div class="glass-panel" style="padding: 0.85rem; border: 1px solid var(--border-gold-subtle); background: linear-gradient(135deg, rgba(229,197,119,0.06) 0%, rgba(9,11,15,0.8) 100%);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <span class="badge badge-gold" style="font-size: 0.65rem;">Recommended for Friends</span>
+              <strong style="font-size: 0.82rem; color: var(--gold-primary);">Method 1: Direct Web Upload (Zero Install)</strong>
+            </div>
+            <span class="badge badge-cyan" style="font-size: 0.65rem;">100% Antivirus Immune</span>
           </div>
-          <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
-            TennoRelicSync lives in your Windows system tray, automatically detects changes to your inventory file as you play Warframe, and syncs your relics and mastery progress directly to this self-hosted server without ever opening a browser.
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.65rem;">
+            No software download required. Directly drag and drop your <code>lastData.dat</code> (AlecaFrame) or <code>inventory.json</code> (WFHelper) below to sync relics and mastery instantly:
+          </p>
+
+          <div id="companionWebDropzone" class="companion-dropzone">
+            <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-main);">
+              Drag & Drop <code>lastData.dat</code> or <code>inventory.json</code>
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-faint);">
+              or <span style="color: var(--gold-primary); text-decoration: underline;">click to browse files</span>
+            </div>
+            <input type="file" id="inputWebDropzoneFile" accept=".dat,.json" style="display: none;">
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.45rem; font-size: 0.68rem; color: var(--text-faint);">
+            <span>Default Path: <code>%LOCALAPPDATA%\AlecaFrame\lastData.dat</code></span>
+            <span>WFHelper: <code>%APPDATA%\WFHelper\api-helper\inventory.json</code></span>
           </div>
         </div>
 
-        <!-- Download Cards Grid -->
-        <div class="companion-download-grid">
-          <a href="/TennoRelicSync.exe" download="TennoRelicSync.exe" class="companion-download-card" id="btnDownloadExe">
-            <div class="card-icon-area">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
+        <!-- Sync Method 2: Standalone Tray Companion (.exe) -->
+        <div class="glass-panel" style="padding: 0.85rem; border: 1px solid var(--border-glass);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <strong style="font-size: 0.82rem; color: var(--text-main);">Method 2: Background Tray Companion (.exe)</strong>
+            <span class="badge" style="font-size: 0.65rem; background: rgba(255,255,255,0.06); color: var(--text-muted);">Set & Forget</span>
+          </div>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.65rem;">
+            Docks silently in your Windows system tray and auto-syncs room inventory as you crack relics in-game.
+          </p>
+
+          <!-- Download Cards Grid -->
+          <div class="companion-download-grid">
+            <a href="/TennoRelicSync.exe" download="TennoRelicSync.exe" class="companion-download-card" id="btnDownloadExe">
+              <div class="card-icon-area">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </div>
+              <div class="card-meta">
+                <div class="card-title">Download Executable (.exe)</div>
+                <div class="card-desc">Windows PE Manifest • v1.0.0</div>
+              </div>
+              <div class="card-size-badge">11 MB</div>
+            </a>
+
+            <a href="/TennoRelicSync.zip" download="TennoRelicSync.zip" class="companion-download-card" id="btnDownloadZip">
+              <div class="card-icon-area">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
+                  <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                  <rect x="1" y="3" width="22" height="5"></rect>
+                  <line x1="10" y1="12" x2="14" y2="12"></line>
+                </svg>
+              </div>
+              <div class="card-meta">
+                <div class="card-title">Download Compressed (.zip)</div>
+                <div class="card-desc">Deflated Archive • Faster download</div>
+              </div>
+              <div class="card-size-badge">5.9 MB</div>
+            </a>
+          </div>
+
+          <!-- Antivirus Heuristic Explanation Box -->
+          <div class="security-alert-box" style="margin-top: 0.65rem;">
+            <div style="font-weight: 700; color: #f59e0b; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.35rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              Antivirus / SmartScreen False-Positive Notice
+            </div>
+            <div>
+              Because this is an independent open-source tool without an expensive ($500/yr) corporate EV code-signing certificate, Windows SmartScreen or heuristic scanners may display a "Trojan.Generic / Wacatac" or "Unknown Publisher" warning.
+              <br>
+              <strong>How to run:</strong> In Windows SmartScreen, click <strong>"More info"</strong> &rarr; <strong>"Run anyway"</strong>.
+              The application source is 100% open-source Go (<code>companion/main.go</code>) with no telemetry, malware, or ads. If your friends prefer not to run executables, use <strong>Method 1 (Direct Web Upload)</strong> above.
+            </div>
+          </div>
+        </div>
+
+        <!-- Sync Method 3: Auditable PowerShell Script -->
+        <div class="glass-panel" style="padding: 0.75rem 0.85rem; background: rgba(0,0,0,0.35);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <strong style="font-size: 0.78rem; color: var(--gold-primary);">Method 3: Plain-Text PowerShell Agent (.ps1)</strong>
+            <a href="/scripts/sync-agent.ps1" download="sync-agent.ps1" class="btn btn-secondary btn-xs">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-            </div>
-            <div class="card-meta">
-              <div class="card-title">Download Executable (.exe)</div>
-              <div class="card-desc">Direct Standalone Binary • No installer needed</div>
-            </div>
-            <div class="card-size-badge">7.2 MB</div>
-          </a>
-
-          <a href="/TennoRelicSync.zip" download="TennoRelicSync.zip" class="companion-download-card" id="btnDownloadZip">
-            <div class="card-icon-area">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
-                <polyline points="21 8 21 21 3 21 3 8"></polyline>
-                <rect x="1" y="3" width="22" height="5"></rect>
-                <line x1="10" y1="12" x2="14" y2="12"></line>
-              </svg>
-            </div>
-            <div class="card-meta">
-              <div class="card-title">Download Compressed (.zip)</div>
-              <div class="card-desc">Deflated Archive • Faster download</div>
-            </div>
-            <div class="card-size-badge">3.0 MB</div>
-          </a>
-        </div>
-
-        <!-- Supported Tools Badges -->
-        <div class="companion-sources-panel">
-          <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); margin-bottom: 0.4rem;">
-            Auto-Detects Either Tool on your PC:
+              Download sync-agent.ps1
+            </a>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-            <div class="source-item">
-              <div class="source-tag text-gold">WFHelper / API-Helper</div>
-              <div class="source-desc">Open-source & Linux/Proton compatible. Zero Overwolf. Reads <code>%APPDATA%\WFHelper\api-helper\inventory.json</code>.</div>
-            </div>
-            <div class="source-item">
-              <div class="source-tag text-gold">AlecaFrame</div>
-              <div class="source-desc">Standard Overwolf app. Reads and decrypts <code>%LOCALAPPDATA%\AlecaFrame\lastData.dat</code> automatically.</div>
-            </div>
+          <div style="font-size: 0.72rem; color: var(--text-faint);">
+            Open-source plain text script. Inspect with Notepad and run with <code>powershell -ExecutionPolicy Bypass -File .\sync-agent.ps1</code>.
           </div>
         </div>
 
         <!-- 1-Click Config Generator Box -->
         <div class="glass-panel" style="padding: 0.65rem 0.85rem; background: rgba(0,0,0,0.35);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-            <span style="font-size: 0.78rem; font-weight: 600; color: var(--gold-primary);">Pre-Configured Setup File</span>
+            <span style="font-size: 0.78rem; font-weight: 600; color: var(--gold-primary);">Companion Configuration (config.json)</span>
             <button type="button" id="btnDownloadConfigJson" class="btn btn-secondary btn-xs">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -420,25 +502,9 @@
             </button>
           </div>
           <div style="font-size: 0.72rem; color: var(--text-faint); margin-bottom: 0.4rem;">
-            Drop this <code>config.json</code> next to <code>TennoRelicSync.exe</code>, or right-click the tray icon and select "Edit Config" to modify it:
+            Save alongside <code>TennoRelicSync.exe</code> or right-click the system tray icon to configure:
           </div>
           <pre id="companionConfigPreview" style="margin: 0; padding: 0.45rem 0.65rem; background: rgba(0,0,0,0.6); border: 1px solid var(--border-glass); border-radius: var(--radius-xs); font-size: 0.72rem; color: var(--gold-subtle); overflow-x: auto;"></pre>
-        </div>
-
-        <!-- Quick 3-Step Setup -->
-        <div class="companion-steps">
-          <div class="step-row">
-            <span class="step-num">1</span>
-            <span class="step-text">Download <strong>TennoRelicSync.exe</strong> and save anywhere (e.g. <code>C:\Games\TennoRelicSync\</code>).</span>
-          </div>
-          <div class="step-row">
-            <span class="step-num">2</span>
-            <span class="step-text">Double-click to start. The app docks into your Windows System Tray (near the clock).</span>
-          </div>
-          <div class="step-row">
-            <span class="step-num">3</span>
-            <span class="step-text">Done! Whenever you farm relics or level mastery in Warframe, your room is synced instantly.</span>
-          </div>
         </div>
       </div>
 
@@ -446,6 +512,7 @@
         <button type="button" id="btnCloseCompanionModalFooter" class="btn btn-secondary btn-sm">Close</button>
       </div>
     </div>
+  </div>
   </div>
 
   <!-- Toast Notification Container -->

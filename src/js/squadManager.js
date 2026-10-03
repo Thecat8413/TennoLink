@@ -120,6 +120,43 @@ export class SquadManager {
   }
 
   /**
+   * Import relics directly from uploaded data (e.g. from /api/upload/dat or web file dropzone)
+   * @param {string} name
+   * @param {Array} relics
+   */
+  async importRelicsForMember(name, relics) {
+    const cleanName = (name || 'Tenno').trim();
+    let member = this.members.find(m => m.name.toLowerCase() === cleanName.toLowerCase());
+
+    if (!member) {
+      const colorIndex = this.members.length % SQUAD_COLORS.length;
+      member = {
+        id: `member_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        name: cleanName,
+        token: 'web_upload',
+        isMock: false,
+        color: SQUAD_COLORS[colorIndex],
+        totalRelics: 0,
+        lastSync: null,
+        syncStatus: 'synced',
+        error: null
+      };
+      this.members.push(member);
+    }
+
+    await saveMemberRelics(member.id, relics);
+    const totalCount = relics.reduce((sum, r) => sum + (r.count || 1), 0);
+
+    member.totalRelics = totalCount;
+    member.lastSync = new Date().toISOString();
+    member.syncStatus = 'synced';
+    member.error = null;
+
+    saveStoredSquadMembers(this.members);
+    return member;
+  }
+
+  /**
    * Retrieve all squad inventories from IndexedDB
    * @returns {Promise<Record<string, Array>>}
    */

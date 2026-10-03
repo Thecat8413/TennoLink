@@ -96,6 +96,14 @@ class WarframeSquadApp {
     this.btnCloseCompanionModalFooter = document.getElementById('btnCloseCompanionModalFooter');
     this.btnDownloadConfigJson = document.getElementById('btnDownloadConfigJson');
     this.companionConfigPreview = document.getElementById('companionConfigPreview');
+    this.companionWebDropzone = document.getElementById('companionWebDropzone');
+    this.inputWebDropzoneFile = document.getElementById('inputWebDropzoneFile');
+
+    // Squad Modal Direct Upload
+    this.btnCloseSquadModalFooter = document.getElementById('btnCloseSquadModalFooter');
+    this.inputSquadUploadPlayer = document.getElementById('inputSquadUploadPlayer');
+    this.inputSquadFileDrop = document.getElementById('inputSquadFileDrop');
+    this.btnTriggerSquadUpload = document.getElementById('btnTriggerSquadUpload');
 
     // Toasts
     this.toastContainer = document.getElementById('toastContainer');
@@ -155,6 +163,47 @@ class WarframeSquadApp {
     }
     if (this.btnDownloadConfigJson) {
       this.btnDownloadConfigJson.addEventListener('click', () => this.handleDownloadConfigJson());
+    }
+
+    if (this.btnCloseSquadModalFooter) {
+      this.btnCloseSquadModalFooter.addEventListener('click', () => this.closeSquadModal());
+    }
+
+    // Direct Web Dropzone Upload
+    if (this.companionWebDropzone && this.inputWebDropzoneFile) {
+      this.companionWebDropzone.addEventListener('click', () => this.inputWebDropzoneFile.click());
+      this.companionWebDropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        this.companionWebDropzone.classList.add('dragover');
+      });
+      this.companionWebDropzone.addEventListener('dragleave', () => {
+        this.companionWebDropzone.classList.remove('dragover');
+      });
+      this.companionWebDropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        this.companionWebDropzone.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          const activePlayer = this.authManager.getCurrentPlayer() || 'Tenno';
+          this.handleDirectInventoryUpload(e.dataTransfer.files[0], activePlayer);
+        }
+      });
+      this.inputWebDropzoneFile.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          const activePlayer = this.authManager.getCurrentPlayer() || 'Tenno';
+          this.handleDirectInventoryUpload(e.target.files[0], activePlayer);
+        }
+      });
+    }
+
+    // Direct Squad Modal Upload
+    if (this.btnTriggerSquadUpload && this.inputSquadFileDrop) {
+      this.btnTriggerSquadUpload.addEventListener('click', () => this.inputSquadFileDrop.click());
+      this.inputSquadFileDrop.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          const targetPlayer = (this.inputSquadUploadPlayer && this.inputSquadUploadPlayer.value.trim()) || 'SquadMate';
+          this.handleDirectInventoryUpload(e.target.files[0], targetPlayer);
+        }
+      });
     }
 
     // Form add member
@@ -342,6 +391,70 @@ class WarframeSquadApp {
     URL.revokeObjectURL(url);
 
     this.showToast('Downloaded config.json! Drop it next to TennoRelicSync.exe.', 'success');
+  }
+
+  /**
+   * Handle direct file uploads (.dat or .json) with zero-install, zero-download web processing
+   * @param {File} file
+   * @param {string} playerName
+   */
+  async handleDirectInventoryUpload(file, playerName) {
+    if (!file) return;
+
+    const targetPlayer = (playerName || this.authPlayerName || 'Tenno').trim();
+    this.showToast(`Processing ${file.name} for ${targetPlayer}...`, 'info');
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const currentRoom = (this.labelCurrentRoom && this.labelCurrentRoom.textContent)
+        ? this.labelCurrentRoom.textContent.trim()
+        : 'OROKIN-7741';
+
+      const endpoint = `/api/upload/dat?player=${encodeURIComponent(targetPlayer)}&room=${encodeURIComponent(currentRoom)}`;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+        },
+        body: buffer,
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.error || `Server responded with status ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (!result.ok) {
+        throw new Error(result.error || 'Failed to process inventory data');
+      }
+
+      // 1. Update squad manager with decrypted/sanitized relics
+      if (result.relics && Array.isArray(result.relics)) {
+        await this.squadManager.importRelicsForMember(targetPlayer, result.relics);
+      }
+
+      // 2. If uploaded for active authenticated player, update mastery controller
+      if (this.masteryController && (!this.authPlayerName || targetPlayer.toLowerCase() === this.authPlayerName.toLowerCase())) {
+        this.masteryController.integrateInventory(result.components || [], result.mastery || []);
+      }
+
+      // 3. Refresh squad data and table matrix
+      await this.refreshSquadData();
+      this.render();
+      if (this.squadModal && this.squadModal.classList.contains('open')) {
+        this.renderSquadModalManageList();
+      }
+
+      this.showToast(
+        `✦ Synced ${result.relicCount || 0} relics & ${result.masteryCount || 0} mastery records for ${targetPlayer}!`,
+        'success'
+      );
+    } catch (err) {
+      console.error('Direct file upload error:', err);
+      this.showToast(`Sync failed: ${err.message}`, 'error');
+    }
   }
 
   setTarget(targetName) {
