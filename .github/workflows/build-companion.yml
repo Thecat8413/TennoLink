@@ -25,7 +25,7 @@ jobs:
         run: |
           cd companion-cs
           dotnet publish -c Release -r win-x64 --self-contained true -o ../publish
-          Move-Item -Path ../publish/TennoRelicSync.exe -Destination ../TennoRelicSync.exe
+          Move-Item -Path ../publish/TennoRelicSync.exe -Destination ../TennoRelicSync.exe -Force
 
       - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4

@@ -16,11 +16,11 @@ namespace TennoRelicSync
         private ContextMenuStrip _contextMenu;
         private AppConfig _config;
         private List<FileSystemWatcher> _watchers = new List<FileSystemWatcher>();
-        private System.Threading.Timer _debounceTimer;
+        private System.Threading.Timer? _debounceTimer;
         private static readonly HttpClient _httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
         private bool _isSyncing = false;
 
-        public event EventHandler OnExit;
+        public event EventHandler? OnExit;
 
         public AppTrayIcon()
         {
@@ -160,7 +160,7 @@ namespace TennoRelicSync
             }
         }
 
-        private string GetLatestInventoryFile()
+        private string? GetLatestInventoryFile()
         {
             var candidates = new List<FileInfo>();
             foreach (var dir in GetCandidateDirectories())
