@@ -1,0 +1,175 @@
+[
+  {
+    "name": "Protea Prime",
+    "category": "Warframe",
+    "vaulted": false,
+    "components": [
+      {
+        "name": "Protea Prime Blueprint",
+        "count": 1,
+        "drops": [
+          { "relic": "Axi P6", "rarity": "Rare", "vaulted": false },
+          { "relic": "Axi P7", "rarity": "Rare", "vaulted": false }
+        ]
+      },
+      {
+        "name": "Protea Prime Chassis",
+        "count": 1,
+        "drops": [
+          { "relic": "Meso P14", "rarity": "Uncommon", "vaulted": false },
+          { "relic": "Meso P15", "rarity": "Uncommon", "vaulted": false }
+        ]
+      },
+      {
+        "name": "Protea Prime Neuroptics",
+        "count": 1,
+        "drops": [
+          { "relic": "Lith P9", "rarity": "Common", "vaulted": false },
+          { "relic": "Lith P10", "rarity": "Common", "vaulted": false }
+        ]
+      },
+      {
+        "name": "Protea Prime Systems",
+        "count": 1,
+        "drops": [
+          { "relic": "Neo P4", "rarity": "Rare", "vaulted": false },
+          { "relic": "Neo P5", "rarity": "Rare", "vaulted": false }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Glaive Prime",
+    "category": "Melee",
+    "vaulted": true,
+    "components": [
+      {
+        "name": "Glaive Prime Blueprint",
+        "count": 1,
+        "drops": [
+          { "relic": "Axi G1", "rarity": "Uncommon", "vaulted": true },
+          { "relic": "Neo G1", "rarity": "Uncommon", "vaulted": true }
+        ]
+      },
+      {
+        "name": "Glaive Prime Blade",
+        "count": 2,
+        "drops": [
+          { "relic": "Axi G1", "rarity": "Rare", "vaulted": true },
+          { "relic": "Neo D1", "rarity": "Rare", "vaulted": true }
+        ]
+      },
+      {
+        "name": "Glaive Prime Disc",
+        "count": 1,
+        "drops": [
+          { "relic": "Lith G1", "rarity": "Common", "vaulted": true },
+          { "relic": "Meso G1", "rarity": "Common", "vaulted": true }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Gauss Prime",
+    "category": "Warframe",
+    "vaulted": false,
+    "components": [
+      {
+        "name": "Gauss Prime Blueprint",
+        "count": 1,
+        "drops": [{ "relic": "Axi G11", "rarity": "Rare", "vaulted": false }]
+      },
+      {
+        "name": "Gauss Prime Chassis",
+        "count": 1,
+        "drops": [{ "relic": "Meso G6", "rarity": "Rare", "vaulted": false }]
+      },
+      {
+        "name": "Gauss Prime Neuroptics",
+        "count": 1,
+        "drops": [{ "relic": "Neo G6", "rarity": "Common", "vaulted": false }]
+      },
+      {
+        "name": "Gauss Prime Systems",
+        "count": 1,
+        "drops": [{ "relic": "Lith G8", "rarity": "Uncommon", "vaulted": false }]
+      }
+    ]
+  },
+  {
+    "name": "Wisp Prime",
+    "category": "Warframe",
+    "vaulted": false,
+    "components": [
+      {
+        "name": "Wisp Prime Blueprint",
+        "count": 1,
+        "drops": [{ "relic": "Axi W3", "rarity": "Rare", "vaulted": false }]
+      },
+      {
+        "name": "Wisp Prime Chassis",
+        "count": 1,
+        "drops": [{ "relic": "Neo W1", "rarity": "Uncommon", "vaulted": false }]
+      },
+      {
+        "name": "Wisp Prime Neuroptics",
+        "count": 1,
+        "drops": [{ "relic": "Meso W1", "rarity": "Common", "vaulted": false }]
+      },
+      {
+        "name": "Wisp Prime Systems",
+        "count": 1,
+        "drops": [{ "relic": "Lith W3", "rarity": "Rare", "vaulted": false }]
+      }
+    ]
+  },
+  {
+    "name": "Braton Prime",
+    "category": "Primary",
+    "vaulted": false,
+    "components": [
+      {
+        "name": "Braton Prime Blueprint",
+        "count": 1,
+        "drops": [{ "relic": "Lith B4", "rarity": "Common", "vaulted": false }]
+      },
+      {
+        "name": "Braton Prime Barrel",
+        "count": 1,
+        "drops": [{ "relic": "Meso B1", "rarity": "Common", "vaulted": false }]
+      },
+      {
+        "name": "Braton Prime Receiver",
+        "count": 1,
+        "drops": [{ "relic": "Axi B1", "rarity": "Rare", "vaulted": false }]
+      },
+      {
+        "name": "Braton Prime Stock",
+        "count": 1,
+        "drops": [{ "relic": "Neo B1", "rarity": "Common", "vaulted": false }]
+      }
+    ]
+  },
+  {
+    "name": "Lex Prime",
+    "category": "Secondary",
+    "vaulted": false,
+    "components": [
+      {
+        "name": "Lex Prime Blueprint",
+        "count": 1,
+        "drops": [{ "relic": "Lith L1", "rarity": "Common", "vaulted": false }]
+      },
+      {
+        "name": "Lex Prime Barrel",
+        "count": 1,
+        "drops": [{ "relic": "Meso L1", "rarity": "Common", "vaulted": false }]
+      },
+      {
+        "name": "Lex Prime Receiver",
+        "count": 1,
+        "drops": [{ "relic": "Axi L1", "rarity": "Rare", "vaulted": false }]
+      }
+    ]
+  }
+]

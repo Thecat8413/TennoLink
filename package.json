@@ -1,0 +1,18 @@
+{
+  "name": "warframe-squad-relic-sync",
+  "version": "1.0.0",
+  "description": "Cross-squad Warframe relic synchronization engine using AlecaFrame public tokens hosted on Cloudflare Pages.",
+  "scripts": {
+    "dev": "npx wrangler pages dev .",
+    "deploy": "npx wrangler pages deploy ."
+  },
+  "keywords": [
+    "warframe",
+    "alecaframe",
+    "relics",
+    "radshare",
+    "cloudflare-pages"
+  ],
+  "author": "",
+  "license": "MIT"
+}
