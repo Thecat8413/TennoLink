@@ -23,7 +23,12 @@ export const SQUAD_COLORS = [
 export class SquadManager {
   constructor() {
     this.client = new AlecaFrameClient();
-    this.members = getStoredSquadMembers();
+    // Filter out and purge any demo/mock squad members
+    const stored = getStoredSquadMembers();
+    this.members = stored.filter(m => !m.isMock && !m.token?.startsWith('mock_'));
+    if (this.members.length !== stored.length) {
+      saveStoredSquadMembers(this.members);
+    }
   }
 
   getMembers() {
@@ -122,21 +127,5 @@ export class SquadManager {
     const ids = this.members.map(m => m.id);
     return await getAllSquadRelics(ids);
   }
-
-  /**
-   * Seeds demo squad data for instant testing
-   */
-  async seedDemoSquad() {
-    this.members = [];
-    const demoProfiles = [
-      { name: 'Alice (Host)', token: 'mock_nova' },
-      { name: 'Excalibur', token: 'mock_excalibur' },
-      { name: 'Mag', token: 'mock_mag' },
-      { name: 'Volt', token: 'mock_volt' }
-    ];
-
-    for (const demo of demoProfiles) {
-      await this.addMember(demo.name, demo.token, true);
-    }
-  }
 }
+

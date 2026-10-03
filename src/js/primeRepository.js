@@ -4,10 +4,22 @@
  */
 
 import { ALL_PRIMES_CATALOG } from '../data/allPrimes.js';
+import { ALL_WARFRAME_ITEMS } from '../data/warframeItems.js';
 
 export class PrimeRepository {
   constructor() {
-    this.catalog = [...ALL_PRIMES_CATALOG];
+    const existing = new Set(ALL_PRIMES_CATALOG.map(p => p.name.toLowerCase().trim()));
+    const additional = ALL_WARFRAME_ITEMS
+      .filter(i => i.isPrime && !existing.has(i.name.toLowerCase().trim()))
+      .map(i => ({
+        name: i.name,
+        category: i.category,
+        vaulted: i.vaulted,
+        marketSlug: i.marketSlug,
+        components: i.components
+      }));
+
+    this.catalog = [...ALL_PRIMES_CATALOG, ...additional];
     this.dynamicCache = new Map();
   }
 
