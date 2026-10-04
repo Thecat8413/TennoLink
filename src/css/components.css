@@ -809,6 +809,15 @@
   padding: 0.2rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-glass);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.view-tabs-container {
+  max-width: 100%;
+  overflow: hidden;
+  flex: 0 1 auto;
+  margin: 0 1rem;
 }
 
 .view-tab {

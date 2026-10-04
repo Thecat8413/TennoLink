@@ -77,8 +77,10 @@ class WarframeSquadApp {
     // View Switching Tabs & Views
     this.tabRelicEngine = document.getElementById('tabRelicEngine');
     this.tabMasteryAssistant = document.getElementById('tabMasteryAssistant');
+    this.tabTasks = document.getElementById('tabTasks');
     this.relicEngineView = document.getElementById('relicEngineView');
     this.masteryAssistantView = document.getElementById('masteryAssistantView');
+    this.tasksView = document.getElementById('tasksView');
 
     // Top Bar & Navigation Actions
     this.btnSyncSquad = document.getElementById('btnSyncSquad');
@@ -153,6 +155,9 @@ class WarframeSquadApp {
     }
     if (this.tabMasteryAssistant) {
       this.tabMasteryAssistant.addEventListener('click', () => this.switchView('mastery'));
+    }
+    if (this.tabTasks) {
+      this.tabTasks.addEventListener('click', () => this.switchView('tasks'));
     }
 
     // Squad actions
@@ -537,18 +542,27 @@ class WarframeSquadApp {
 
   switchView(viewName) {
     this.currentView = viewName;
+    
+    // Reset all tabs and views
+    const tabs = [this.tabRelicEngine, this.tabMasteryAssistant, this.tabTasks];
+    const views = [this.relicEngineView, this.masteryAssistantView, this.tasksView];
+    
+    tabs.forEach(tab => tab && tab.classList.remove('active'));
+    views.forEach(view => view && (view.style.display = 'none'));
+    
     if (viewName === 'mastery') {
-      if (this.tabRelicEngine) this.tabRelicEngine.classList.remove('active');
       if (this.tabMasteryAssistant) this.tabMasteryAssistant.classList.add('active');
-      if (this.relicEngineView) this.relicEngineView.style.display = 'none';
       if (this.masteryAssistantView) {
         this.masteryAssistantView.style.display = 'flex';
         this.masteryController.render();
       }
+    } else if (viewName === 'tasks') {
+      if (this.tabTasks) this.tabTasks.classList.add('active');
+      if (this.tasksView) {
+        this.tasksView.style.display = 'block';
+      }
     } else {
-      if (this.tabMasteryAssistant) this.tabMasteryAssistant.classList.remove('active');
       if (this.tabRelicEngine) this.tabRelicEngine.classList.add('active');
-      if (this.masteryAssistantView) this.masteryAssistantView.style.display = 'none';
       if (this.relicEngineView) {
         this.relicEngineView.style.display = 'block';
         this.render();
@@ -605,57 +619,124 @@ class WarframeSquadApp {
 
   updateUserProfileNav() {
     if (!this.userProfileArea) return;
+    
+    // Save hidden buttons before overwriting innerHTML
+    const hiddenContainer = document.getElementById('hiddenSettingsActions');
+    const dropdownMenu = this.userProfileArea.querySelector('.user-dropdown-menu');
+    if (hiddenContainer && dropdownMenu) {
+      while (dropdownMenu.firstChild) {
+        hiddenContainer.appendChild(dropdownMenu.firstChild);
+      }
+    }
+    
     const player = this.authManager.getCurrentPlayer();
+    let badgeHtml = '';
 
     if (player) {
       const metrics = this.masteryController.calculateMasteryMetrics();
-      this.userProfileArea.innerHTML = `
-        <div class="user-profile-badge" title="Click to view Mastery Dossier">
+      badgeHtml = `
+        <div class="user-profile-badge dropdown-toggle" title="Settings & Profile">
           <div class="user-avatar-gold">✦</div>
           <div class="user-meta">
             <span class="user-gamertag">${player}</span>
             <span class="user-mr-badge">MR ${metrics.rank}</span>
           </div>
-          <button id="btnLogout" class="btn-icon-subtle" title="Sign Out of Tenno Sanctum">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-              <polyline points="16 17 21 12 16 7"></polyline>
-              <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-          </button>
         </div>
       `;
-
-      const badge = this.userProfileArea.querySelector('.user-profile-badge');
-      if (badge) {
-        badge.addEventListener('click', (e) => {
-          if (e.target.closest('#btnLogout')) return;
-          this.switchView('mastery');
-        });
-      }
-
-      const btnLogout = this.userProfileArea.querySelector('#btnLogout');
-      if (btnLogout) {
-        btnLogout.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.handleLogout();
-        });
-      }
     } else {
-      this.userProfileArea.innerHTML = `
-        <button id="btnOpenAuthModal" class="btn btn-secondary btn-sm" title="Sign in with Gamertag and 4-digit PIN">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      badgeHtml = `
+        <div class="user-profile-badge dropdown-toggle" title="Settings & Sign In">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          Sign In (PIN)
-        </button>
+          <div class="user-meta">
+            <span class="user-gamertag">Guest</span>
+          </div>
+        </div>
       `;
+    }
 
-      const btnOpen = this.userProfileArea.querySelector('#btnOpenAuthModal');
-      if (btnOpen) {
-        btnOpen.addEventListener('click', () => this.openAuthModal());
+    this.userProfileArea.innerHTML = `
+      ${badgeHtml}
+      <div class="user-dropdown-menu" style="display: none; position: absolute; right: 0; top: 100%; background: var(--bg-card); border: 1px solid var(--border-gold-subtle); padding: 0.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-card); z-index: 1000; display: flex; flex-direction: column; gap: 0.4rem; min-width: 200px;">
+        ${!player ? `
+        <button id="btnOpenAuthModal" class="btn btn-primary btn-sm" style="justify-content: center; width: 100%; margin-bottom: 0.5rem;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+            <polyline points="10 17 15 12 10 7"></polyline>
+            <line x1="15" y1="12" x2="3" y2="12"></line>
+          </svg>
+          Sign In
+        </button>
+        ` : `
+        <button id="btnViewMastery" class="btn btn-secondary btn-sm" style="justify-content: flex-start; width: 100%;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          View Mastery Dossier
+        </button>
+        <button id="btnLogout" class="btn btn-secondary btn-sm" style="justify-content: flex-start; width: 100%; margin-bottom: 0.5rem;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          Sign Out
+        </button>
+        `}
+      </div>
+    `;
+
+    const newDropdownMenu = this.userProfileArea.querySelector('.user-dropdown-menu');
+    newDropdownMenu.style.display = 'none'; // Initially hidden
+    
+    // Move buttons into dropdown
+    if (hiddenContainer && newDropdownMenu) {
+      while (hiddenContainer.firstChild) {
+        newDropdownMenu.appendChild(hiddenContainer.firstChild);
       }
+    }
+    
+    // Toggle dropdown
+    const badge = this.userProfileArea.querySelector('.dropdown-toggle');
+    if (badge) {
+      badge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        newDropdownMenu.style.display = newDropdownMenu.style.display === 'none' ? 'flex' : 'none';
+      });
+    }
+    
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!this.userProfileArea.contains(e.target)) {
+        newDropdownMenu.style.display = 'none';
+      }
+    });
+
+    // Reattach inline listeners for auth and mastery
+    const btnLogout = this.userProfileArea.querySelector('#btnLogout');
+    if (btnLogout) {
+      btnLogout.addEventListener('click', (e) => {
+        e.stopPropagation();
+        newDropdownMenu.style.display = 'none';
+        this.handleLogout();
+      });
+    }
+    const btnViewMastery = this.userProfileArea.querySelector('#btnViewMastery');
+    if (btnViewMastery) {
+      btnViewMastery.addEventListener('click', (e) => {
+        e.stopPropagation();
+        newDropdownMenu.style.display = 'none';
+        this.switchView('mastery');
+      });
+    }
+    const btnOpen = this.userProfileArea.querySelector('#btnOpenAuthModal');
+    if (btnOpen) {
+      btnOpen.addEventListener('click', () => {
+        newDropdownMenu.style.display = 'none';
+        this.openAuthModal();
+      });
     }
   }
 

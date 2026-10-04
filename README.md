@@ -1,12 +1,12 @@
 # Warframe Squad Relic Sync & Mastery Engine (Self-Hosted Edition)
 
-> A high-performance, self-hosted Warframe relic synchronization engine, radshare optimizer, and persistent mastery tracker. Built with a sleek **Vitruvian Orokin aesthetic**, running on **Docker Compose** with persistent **SQLite storage**.
+> A high-performance, self-hosted Warframe relic synchronization engine, radshare optimizer, and persistent mastery tracker. Built with a sleek **Warframe Sync aesthetic**, running on **Docker Compose** with persistent **SQLite storage**.
 
 ---
 
 ## 🏛️ Key Features
 
-1. **Vitruvian Orokin Interface:**
+1. **Warframe Sync Interface:**
    - Authentic *The Sacrifice* aesthetic featuring warm obsidian backgrounds, hairline gold filigree, parchment typography, and compact high-density tables.
    - Clean, low-scroll layout designed for multi-monitor setups and quick in-mission glanceability.
 

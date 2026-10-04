@@ -12,10 +12,10 @@ import {
 import { AlecaFrameClient } from './api.js';
 
 export const SQUAD_COLORS = [
-  { name: 'Vitruvian Gold', hex: '#e5c577', bg: 'rgba(229, 197, 119, 0.15)', border: '#e5c577' },
+  { name: 'Orokin Gold', hex: '#e5c577', bg: 'rgba(229, 197, 119, 0.15)', border: '#e5c577' },
   { name: 'Orokin Bronze', hex: '#c99b5d', bg: 'rgba(201, 155, 93, 0.15)', border: '#c99b5d' },
   { name: 'Celestine Argent', hex: '#9db4c0', bg: 'rgba(157, 180, 192, 0.15)', border: '#9db4c0' },
-  { name: 'Vitruvian Jade', hex: '#87aa8e', bg: 'rgba(135, 170, 142, 0.15)', border: '#87aa8e' },
+  { name: 'Orokin Jade', hex: '#87aa8e', bg: 'rgba(135, 170, 142, 0.15)', border: '#87aa8e' },
   { name: 'Solar Copper', hex: '#d48b59', bg: 'rgba(212, 139, 89, 0.15)', border: '#d48b59' },
   { name: 'Void Umber', hex: '#b3957b', bg: 'rgba(179, 149, 123, 0.15)', border: '#b3957b' }
 ];
