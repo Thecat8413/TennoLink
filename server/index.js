@@ -188,7 +188,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, HOST, () => {
   console.log('====================================================');
-  console.log(` Warframe Helper (Self-Hosted Vitruvian Engine)`);
+  console.log(` Warframe Helper (Self-Hosted Warframe Sync)`);
   console.log(` Server active on: http://${HOST}:${PORT}`);
   console.log(` Data Volume Path: ${process.env.DATA_DIR || path.join(process.cwd(), 'data')}`);
   console.log('====================================================');

@@ -132,7 +132,6 @@ body::before {
   border-color: rgba(229, 197, 119, 0.25);
 }
 
-/* Compact Vitruvian Header & Navbar */
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -144,6 +143,8 @@ body::before {
   backdrop-filter: blur(16px);
   border-radius: var(--radius-md);
   min-height: 46px;
+  position: relative;
+  z-index: 1000;
 }
 
 .brand {
