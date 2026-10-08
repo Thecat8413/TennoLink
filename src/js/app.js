@@ -590,14 +590,14 @@ class WarframeSquadApp {
   async handleAuthSubmit(e) {
     e.preventDefault();
     const playerName = this.inputAuthPlayerName.value.trim();
-    const pin = this.inputAuthPin.value.trim();
+    const password = this.inputAuthPin.value.trim();
 
-    if (!playerName || !pin) {
-      this.showToast('Please enter both your Gamertag and 4-digit PIN.', 'error');
+    if (!playerName || !password) {
+      this.showToast('Please enter both your Gamertag and Password.', 'error');
       return;
     }
 
-    const res = await this.authManager.login(playerName, pin);
+    const res = await this.authManager.login(playerName, password);
     if (!res.ok) {
       this.showToast(res.error || 'Authentication failed', 'error');
       return;
@@ -744,14 +744,12 @@ class WarframeSquadApp {
     const code = this.inputRoomCode?.value.trim().toUpperCase() || 'OROKIN-7741';
     const pin = this.inputRoomPin?.value.trim() || '';
 
-    if (pin && (pin.length !== 4 || !/^\d{4}$/.test(pin))) {
-      this.showToast('Room PIN must be 4 digits', 'error');
-      return;
-    }
+    this.activeRoom = code;
+    saveStoredActiveRoom(code);
 
     if (this.labelCurrentRoom) this.labelCurrentRoom.textContent = code;
     this.authManager.saveRoomPin(code, pin);
-    this.showToast(`Active room set to ${code}${pin ? ' (Protected with 4-Digit PIN)' : ''}`, 'success');
+    this.showToast(`Active room set to ${code}${pin ? ' (Protected with PIN)' : ''}`, 'success');
   }
 
   // -------------------------------------------------------------

@@ -38,8 +38,8 @@ try {
   initJsonFallback();
 }
 
-function hashPin(pin) {
-  return crypto.createHash('sha256').update(String(pin || '').trim()).digest('hex');
+function hashPassword(password) {
+  return crypto.createHash('sha256').update(String(password || '').trim()).digest('hex');
 }
 
 function initSchema() {
@@ -66,7 +66,7 @@ function initSchema() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS player_accounts (
       player_name TEXT PRIMARY KEY,
-      pin_hash TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
       sync_token TEXT NOT NULL,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
@@ -168,11 +168,11 @@ function saveJsonFallback() {
 }
 
 export const Database = {
-  // --- Player Authentication (Gamertag + 4-digit PIN) ---
-  authenticatePlayer(playerName, pin) {
+  // --- Player Authentication (Gamertag + Password) ---
+  authenticatePlayer(playerName, password) {
     const cleanName = playerName.trim();
-    const cleanPin = String(pin || '').trim();
-    const pinHash = hashPin(cleanPin);
+    const cleanPass = String(password || '').trim();
+    const passwordHash = hashPassword(cleanPass);
     const now = Date.now();
 
     if (isNativeSqlite) {
@@ -181,15 +181,15 @@ export const Database = {
         // Register on first login
         const syncToken = `tok_${crypto.randomBytes(16).toString('hex')}`;
         db.prepare(`
-          INSERT INTO player_accounts (player_name, pin_hash, sync_token, created_at, updated_at)
+          INSERT INTO player_accounts (player_name, password_hash, sync_token, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?)
-        `).run(cleanName, pinHash, syncToken, now, now);
+        `).run(cleanName, passwordHash, syncToken, now, now);
 
         return { ok: true, isNew: true, playerName: cleanName, syncToken };
       }
 
-      if (account.pin_hash !== pinHash) {
-        return { ok: false, error: 'Incorrect 4-digit PIN for this Gamertag' };
+      if (account.password_hash !== passwordHash && account.pin_hash !== passwordHash) {
+        return { ok: false, error: 'Incorrect password for this Gamertag' };
       }
 
       return { ok: true, isNew: false, playerName: cleanName, syncToken: account.sync_token };
@@ -197,14 +197,14 @@ export const Database = {
       let account = fallbackStore.accounts.get(cleanName);
       if (!account) {
         const syncToken = `tok_${crypto.randomBytes(16).toString('hex')}`;
-        account = { player_name: cleanName, pin_hash: pinHash, sync_token: syncToken, created_at: now, updated_at: now };
+        account = { player_name: cleanName, password_hash: passwordHash, sync_token: syncToken, created_at: now, updated_at: now };
         fallbackStore.accounts.set(cleanName, account);
         saveJsonFallback();
         return { ok: true, isNew: true, playerName: cleanName, syncToken };
       }
 
-      if (account.pin_hash !== pinHash) {
-        return { ok: false, error: 'Incorrect 4-digit PIN for this Gamertag' };
+      if (account.password_hash !== passwordHash && account.pin_hash !== passwordHash) {
+        return { ok: false, error: 'Incorrect password for this Gamertag' };
       }
       return { ok: true, isNew: false, playerName: cleanName, syncToken: account.sync_token };
     }
@@ -308,13 +308,12 @@ export const Database = {
   },
 
   // --- Inventories (Relics & Room State) ---
-  savePlayerInventory(roomCode, playerName, relics, mastery = null, components = null, rawHash = '') {
+  savePlayerInventory(playerName, relics, mastery = null, components = null, rawHash = '') {
     const now = Date.now();
-    const id = `inv_${roomCode}_${playerName}`;
+    const id = `inv_${playerName}`;
     const relicsJson = JSON.stringify(relics || []);
     const masteryJson = mastery ? JSON.stringify(mastery) : null;
     const componentsJson = components ? JSON.stringify(components) : null;
-    const upperCode = roomCode.toUpperCase();
 
     if (isNativeSqlite) {
       db.prepare(`
@@ -326,12 +325,11 @@ export const Database = {
           components_json = excluded.components_json,
           raw_hash = excluded.raw_hash,
           updated_at = excluded.updated_at
-      `).run(id, upperCode, playerName, relicsJson, masteryJson, componentsJson, rawHash, now);
+      `).run(id, 'GLOBAL', playerName, relicsJson, masteryJson, componentsJson, rawHash, now);
 
-      db.prepare('UPDATE members SET last_sync = ? WHERE room_code = ? AND player_name = ?').run(now, upperCode, playerName);
-      db.prepare('UPDATE rooms SET updated_at = ? WHERE code = ?').run(now, upperCode);
+      db.prepare('UPDATE members SET last_sync = ? WHERE player_name = ?').run(now, playerName);
     } else {
-      fallbackStore.inventories.set(id, { id, room_code: upperCode, player_name: playerName, relics, mastery, components, rawHash, updated_at: now });
+      fallbackStore.inventories.set(id, { id, room_code: 'GLOBAL', player_name: playerName, relics, mastery, components, rawHash, updated_at: now });
       saveJsonFallback();
     }
   },
@@ -339,8 +337,14 @@ export const Database = {
   getRoomInventories(roomCode) {
     const upperCode = roomCode.toUpperCase();
     if (isNativeSqlite) {
-      const stmt = db.prepare('SELECT * FROM inventories WHERE room_code = ?');
-      const rows = stmt.all(upperCode);
+      const members = db.prepare('SELECT player_name FROM members WHERE room_code = ?').all(upperCode);
+      const playerNames = members.map(m => m.player_name);
+      
+      if (playerNames.length === 0) return [];
+      
+      const placeholders = playerNames.map(() => '?').join(',');
+      const stmt = db.prepare(`SELECT * FROM inventories WHERE player_name IN (${placeholders})`);
+      const rows = stmt.all(...playerNames);
       return rows.map(r => ({
         ...r,
         relics: JSON.parse(r.relics_json || '[]'),
@@ -348,7 +352,10 @@ export const Database = {
         components: r.components_json ? JSON.parse(r.components_json) : []
       }));
     } else {
-      return Array.from(fallbackStore.inventories.values()).filter(i => i.room_code === upperCode);
+      const members = Array.from(fallbackStore.members.values()).filter(m => m.room_code === upperCode);
+      const playerNames = members.map(m => m.player_name);
+      return Array.from(fallbackStore.inventories.values())
+        .filter(i => playerNames.includes(i.player_name));
     }
   },
 

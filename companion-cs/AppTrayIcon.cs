@@ -197,8 +197,8 @@ namespace TennoRelicSync
                     byte[] data = File.ReadAllBytes(file);
                     
                     var endpoint = $"{_config.ServerUrl.TrimEnd('/')}/api/upload/dat?player={Uri.EscapeDataString(_config.PlayerName)}";
-                    if (!string.IsNullOrEmpty(_config.RoomCode))
-                        endpoint += $"&room={Uri.EscapeDataString(_config.RoomCode)}";
+                    if (!string.IsNullOrEmpty(_config.Password))
+                        endpoint += $"&password={Uri.EscapeDataString(_config.Password)}";
 
                     var content = new ByteArrayContent(data);
                     content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");

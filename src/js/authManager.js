@@ -1,6 +1,6 @@
 /**
  * Tenno Authentication & Session Manager
- * Handles Gamertag + 4-Digit PIN authentication, session tokens,
+ * Handles Gamertag + Password authentication, session tokens,
  * room PIN caching, and local/remote synchronization.
  */
 
@@ -64,31 +64,31 @@ export class AuthManager {
   }
 
   /**
-   * Hashes a 4-digit PIN with SHA-256 for secure client-side comparison
+   * Hashes a password with SHA-256 for secure client-side comparison
    */
-  async hashPin(playerName, pin) {
+  async hashPassword(playerName, password) {
     const encoder = new TextEncoder();
-    const data = encoder.encode(`tenno:${playerName.toLowerCase()}:${pin}:orokin_salt`);
+    const data = encoder.encode(`tenno:${playerName.toLowerCase()}:${password}:orokin_salt`);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
   /**
-   * Login or register a player with Gamertag + 4-digit PIN
+   * Login or register a player with Gamertag + Password
    * @param {string} playerName
-   * @param {string} pin
+   * @param {string} password
    * @returns {Promise<{ok: boolean, playerName?: string, token?: string, error?: string}>}
    */
-  async login(playerName, pin) {
+  async login(playerName, password) {
     const cleanName = playerName.trim();
-    const cleanPin = String(pin).trim();
+    const cleanPassword = String(password).trim();
 
     if (!cleanName) {
       return { ok: false, error: 'Please enter your Gamertag / Player Name' };
     }
 
-    if (!cleanPin || cleanPin.length !== 4 || !/^\d{4}$/.test(cleanPin)) {
-      return { ok: false, error: 'PIN must be exactly 4 digits (0-9)' };
+    if (!cleanPassword || cleanPassword.length < 4) {
+      return { ok: false, error: 'Password must be at least 4 characters' };
     }
 
     // Attempt backend login first
@@ -96,7 +96,7 @@ export class AuthManager {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerName: cleanName, pin: cleanPin })
+        body: JSON.stringify({ playerName: cleanName, password: cleanPassword })
       });
 
       if (res.ok) {
