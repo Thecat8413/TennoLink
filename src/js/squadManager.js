@@ -100,9 +100,15 @@ export class SquadManager {
       await saveMemberRelics(member.id, relics);
 
       try {
+         const sessionStr = window.localStorage.getItem('wf_tenno_session');
+         const session = sessionStr ? JSON.parse(sessionStr) : null;
+         const token = session ? session.syncToken : '';
          await fetch(`/api/upload/dat?player=${encodeURIComponent(member.name)}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({ InventoryJson: relics })
          });
       } catch (e) {
@@ -189,7 +195,10 @@ export class SquadManager {
       try {
         await fetch(`/api/squad/${encodeURIComponent(roomCode)}/join`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.syncToken}`
+          },
           body: JSON.stringify({ playerName: currentActivePlayer })
         });
       } catch (e) {}

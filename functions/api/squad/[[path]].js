@@ -84,6 +84,30 @@ export async function onRequest(context) {
     if (method === 'POST') {
       try { body = await request.json(); } catch(e) {}
     }
+    // --- AUTHENTICATION CHECK ---
+    const authHeader = request.headers.get('Authorization');
+    let authenticatedUser = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '').trim();
+      const account = await env.DB.prepare('SELECT player_name FROM player_accounts WHERE sync_token = ?').bind(token).first();
+      if (account) authenticatedUser = account.player_name;
+    }
+
+    // Require Auth for mutations
+    if (method === 'POST' && (subAction === 'join' || subAction === 'sync')) {
+      if (!authenticatedUser) {
+        return new Response(JSON.stringify({ ok: false, error: 'Unauthorized. Valid Bearer token required.' }), { status: 401, headers: corsHeaders });
+      }
+      
+      let reqPlayer = '';
+      try { reqPlayer = body?.playerName?.trim(); } catch(e){}
+      
+      if (reqPlayer && reqPlayer.toLowerCase() !== authenticatedUser.toLowerCase()) {
+        return new Response(JSON.stringify({ ok: false, error: 'Forbidden. You can only modify your own data.' }), { status: 403, headers: corsHeaders });
+      }
+    }
+    // ----------------------------
+    
     const providedPin = body?.pin || url.searchParams.get('pin') || request.headers.get('x-room-pin');
     
     if (roomRecord.pin && roomRecord.pin !== providedPin) {

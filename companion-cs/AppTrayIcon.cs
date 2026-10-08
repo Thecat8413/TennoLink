@@ -4,6 +4,8 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -180,6 +182,30 @@ namespace TennoLink
             }
         }
 
+        
+        private byte[] DecryptLastData(byte[] cipherText)
+        {
+            byte[] key = Encoding.ASCII.GetBytes("LEO-ALEC\tEO-ALEC");
+            byte[] iv = new byte[] { 49, 50, 70, 71, 66, 51, 54, 45, 76, 69, 51, 45, 113, 61, 57, 0 };
+
+            using (Aes aesAlg = Aes.Create())
+            {
+                aesAlg.Key = key;
+                aesAlg.IV = iv;
+                aesAlg.Mode = CipherMode.CBC;
+                aesAlg.Padding = PaddingMode.PKCS7;
+
+                using (ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV))
+                using (MemoryStream msDecrypt = new MemoryStream(cipherText))
+                using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                using (MemoryStream msPlain = new MemoryStream())
+                {
+                    csDecrypt.CopyTo(msPlain);
+                    return msPlain.ToArray();
+                }
+            }
+        }
+
         private string? GetLatestInventoryFile()
         {
             var candidates = new List<FileInfo>();
@@ -215,13 +241,21 @@ namespace TennoLink
                     SetStatus("Syncing...", Color.LimeGreen);
 
                     byte[] data = File.ReadAllBytes(file);
+                    if (file.EndsWith(".dat", StringComparison.OrdinalIgnoreCase))
+                    {
+                        try { data = DecryptLastData(data); } catch { /* If it fails, send as is or skip */ }
+                    }
                     
                     var endpoint = $"{_config.ServerUrl.TrimEnd('/')}/api/upload/dat?player={Uri.EscapeDataString(_config.PlayerName)}";
-                    if (!string.IsNullOrEmpty(_config.Password))
-                        endpoint += $"&password={Uri.EscapeDataString(_config.Password)}";
-
                     var content = new ByteArrayContent(data);
-                    content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+                    content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+                    
+                    // Use Basic Auth for API security
+                    if (!string.IsNullOrEmpty(_config.Password))
+                    {
+                        var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_config.PlayerName}:{_config.Password}"));
+                        _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", auth);
+                    }
 
                     var response = await _httpClient.PostAsync(endpoint, content);
                     
