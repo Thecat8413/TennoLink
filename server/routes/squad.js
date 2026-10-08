@@ -108,11 +108,22 @@ export async function handleSquadRequest(req, res, url, body) {
     const color = body?.color || '#e5c577';
     const syncToken = body?.syncToken || `tok_${Math.random().toString(36).substr(2, 8)}`;
 
+    
     if (!playerName) {
       res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({ ok: false, error: 'Missing playerName' }));
       return;
     }
+    
+    if (Database.isNativeSqlite) {
+      const currentRooms = Database.db.prepare('SELECT room_code FROM members WHERE player_name = ?').all(playerName);
+      if (currentRooms.length >= 50 && !currentRooms.some(r => r.room_code === roomCode)) {
+        res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: false, error: 'Maximum of 50 rooms reached. Please leave a room before joining another.' }));
+        return;
+      }
+    }
+
 
     const member = Database.addOrUpdateMember(roomCode, playerName, color, syncToken);
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -121,6 +132,38 @@ export async function handleSquadRequest(req, res, url, body) {
   }
 
   // 5. POST /api/squad/:code/sync - Ingest member relics & mastery into the room
+  
+  // 6. DELETE /api/squad/:code/leave
+  if (method === 'DELETE' && subAction === 'leave') {
+    const authHeader = req.headers['authorization'];
+    let authenticatedUser = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '').trim();
+      authenticatedUser = Database.getPlayerByToken(token);
+    }
+    
+    if (!authenticatedUser) {
+      res.writeHead(401, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'Unauthorized.' }));
+      return;
+    }
+
+    const playerName = body?.playerName?.trim() || authenticatedUser;
+
+    if (playerName.toLowerCase() !== authenticatedUser.toLowerCase()) {
+      res.writeHead(403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'Forbidden. You can only remove yourself.' }));
+      return;
+    }
+
+    if (Database.isNativeSqlite) {
+      Database.db.prepare('DELETE FROM members WHERE room_code = ? AND player_name = ?').run(roomCode, playerName);
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({ ok: true, message: `Left room ${roomCode}` }));
+    return;
+  }
+
   if (method === 'POST' && subAction === 'sync') {
     if (!pinCheck.ok) {
       res.writeHead(403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -134,11 +177,22 @@ export async function handleSquadRequest(req, res, url, body) {
     const components = body?.components || null;
     const rawHash = body?.hash || '';
 
+    
     if (!playerName) {
       res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({ ok: false, error: 'Missing playerName' }));
       return;
     }
+    
+    if (Database.isNativeSqlite) {
+      const currentRooms = Database.db.prepare('SELECT room_code FROM members WHERE player_name = ?').all(playerName);
+      if (currentRooms.length >= 50 && !currentRooms.some(r => r.room_code === roomCode)) {
+        res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: false, error: 'Maximum of 50 rooms reached. Please leave a room before joining another.' }));
+        return;
+      }
+    }
+
 
     Database.savePlayerInventory(playerName, relics, mastery, components, rawHash);
 

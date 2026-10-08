@@ -148,9 +148,16 @@ export async function onRequest(context) {
       const color = body?.color || '#e5c577';
       const syncToken = body?.syncToken || `tok_${Math.random().toString(36).substr(2, 8)}`;
 
+      
       if (!playerName) {
         return new Response(JSON.stringify({ ok: false, error: 'Missing playerName' }), { status: 400, headers: corsHeaders });
       }
+      
+      const { results: currentRooms } = await env.DB.prepare('SELECT room_code FROM members WHERE player_name = ?').bind(playerName).all();
+      if (currentRooms.length >= 50 && !currentRooms.some(r => r.room_code === roomCode)) {
+        return new Response(JSON.stringify({ ok: false, error: 'Maximum of 50 rooms reached. Please leave a room before joining another.' }), { status: 400, headers: corsHeaders });
+      }
+
 
       await env.DB.prepare(`
         INSERT INTO members (room_code, player_name, color, sync_token, joined_at)
@@ -162,15 +169,48 @@ export async function onRequest(context) {
     }
 
     // 5. POST /api/squad/:code/sync
+    
+    // 6. DELETE /api/squad/:code/leave
+    if (method === 'DELETE' && subAction === 'leave') {
+      const playerName = body?.playerName?.trim() || authenticatedUser;
+      
+      
+      if (!playerName) {
+        return new Response(JSON.stringify({ ok: false, error: 'Missing playerName' }), { status: 400, headers: corsHeaders });
+      }
+      
+      const { results: currentRooms } = await env.DB.prepare('SELECT room_code FROM members WHERE player_name = ?').bind(playerName).all();
+      if (currentRooms.length >= 50 && !currentRooms.some(r => r.room_code === roomCode)) {
+        return new Response(JSON.stringify({ ok: false, error: 'Maximum of 50 rooms reached. Please leave a room before joining another.' }), { status: 400, headers: corsHeaders });
+      }
+
+
+      // If user isn't admin and tries to remove someone else, block
+      if (playerName.toLowerCase() !== authenticatedUser.toLowerCase()) {
+         // TODO: if isAdmin, let them do it? For now just block. Admins use /api/admin
+         return new Response(JSON.stringify({ ok: false, error: 'Forbidden. You can only remove yourself.' }), { status: 403, headers: corsHeaders });
+      }
+
+      await env.DB.prepare('DELETE FROM members WHERE room_code = ? AND player_name = ?').bind(roomCode, playerName).run();
+      return new Response(JSON.stringify({ ok: true, message: `Left room ${roomCode}` }), { status: 200, headers: corsHeaders });
+    }
+
     if (method === 'POST' && subAction === 'sync') {
       const playerName = body?.playerName?.trim();
       const relics = body?.relics || [];
       const mastery = body?.mastery || null;
       const components = body?.components || null;
 
+      
       if (!playerName) {
         return new Response(JSON.stringify({ ok: false, error: 'Missing playerName' }), { status: 400, headers: corsHeaders });
       }
+      
+      const { results: currentRooms } = await env.DB.prepare('SELECT room_code FROM members WHERE player_name = ?').bind(playerName).all();
+      if (currentRooms.length >= 50 && !currentRooms.some(r => r.room_code === roomCode)) {
+        return new Response(JSON.stringify({ ok: false, error: 'Maximum of 50 rooms reached. Please leave a room before joining another.' }), { status: 400, headers: corsHeaders });
+      }
+
 
       await env.DB.prepare(`
         INSERT INTO inventories (id, room_code, player_name, relics_json, mastery_json, components_json, raw_hash, updated_at)

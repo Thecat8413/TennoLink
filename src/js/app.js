@@ -292,6 +292,37 @@ class WarframeSquadApp {
     this.targetSearchInput.addEventListener('focus', () => {
       this.renderTargetDropdown();
     });
+
+    // Modal Listeners
+    const btnCloseProfile = document.getElementById('btnCloseProfileModal');
+    if (btnCloseProfile) btnCloseProfile.addEventListener('click', () => document.getElementById('profileModal').classList.remove('open'));
+    
+    const btnHardPurge = document.getElementById('btnHardPurgeData');
+    if (btnHardPurge) btnHardPurge.addEventListener('click', () => this.handleHardPurge());
+
+    const btnCloseAdmin = document.getElementById('btnCloseAdminModal');
+    if (btnCloseAdmin) btnCloseAdmin.addEventListener('click', () => document.getElementById('adminModal').classList.remove('open'));
+
+    const btnAdminLoadUsers = document.getElementById('btnAdminLoadUsers');
+    if (btnAdminLoadUsers) btnAdminLoadUsers.addEventListener('click', () => this.handleAdminLoadUsers());
+
+    const btnAdminLoadRooms = document.getElementById('btnAdminLoadRooms');
+    if (btnAdminLoadRooms) btnAdminLoadRooms.addEventListener('click', () => this.handleAdminLoadRooms());
+
+    const btnCloseRooms = document.getElementById('btnCloseRoomsModal');
+    if (btnCloseRooms) btnCloseRooms.addEventListener('click', () => document.getElementById('roomsModal').classList.remove('open'));
+
+    const btnSubmitJoinRoom = document.getElementById('btnSubmitJoinRoom');
+    if (btnSubmitJoinRoom) {
+      btnSubmitJoinRoom.addEventListener('click', () => {
+        const code = document.getElementById('inputJoinRoomCode').value.trim();
+        const pin = document.getElementById('inputJoinRoomPin').value.trim();
+        if (code) {
+           this.handleJoinRoomWithAuth(code, pin);
+        }
+      });
+    }
+
   }
 
   async start() {
@@ -695,6 +726,29 @@ class WarframeSquadApp {
         this.switchView('mastery');
       });
     }
+
+    const btnClaimAdmin = this.userProfileArea.querySelector('#btnClaimAdmin');
+    if (btnClaimAdmin) btnClaimAdmin.addEventListener('click', async (e) => {
+      e.stopPropagation(); newDropdownMenu.style.display = 'none';
+      if (!confirm("Are you the server owner? This will permanently claim the single Admin role for this account.")) return;
+      const session = this.authManager.getSession();
+      if (!session) return;
+      try {
+        const res = await fetch('/api/admin/claim', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.syncToken}` }
+        });
+        if (res.ok) {
+           this.showToast('Admin rights claimed! Please log out and back in.', 'success');
+        } else {
+           const err = await res.json();
+           this.showToast(err.error || 'Failed to claim admin.', 'error');
+        }
+      } catch (e) {
+         this.showToast('Network error.', 'error');
+      }
+    });
+
     const btnOpen = this.userProfileArea.querySelector('#btnOpenAuthModal');
     if (btnOpen) {
       btnOpen.addEventListener('click', () => {
@@ -1072,7 +1126,43 @@ class WarframeSquadApp {
       setTimeout(() => toast.remove(), 200);
     }, 4000);
   }
+
+  async handleJoinRoomWithAuth(code, pin) {
+    if (!code) return;
+    const session = this.authManager.getSession();
+    if (!session) {
+      this.showToast('You must be logged in to join rooms.', 'error');
+      return;
+    }
+    try {
+      const res = await fetch(`/api/squad/${encodeURIComponent(code.toUpperCase())}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.syncToken}`
+        },
+        body: JSON.stringify({
+           playerName: session.playerName,
+           color: '#e5c577',
+           syncToken: session.syncToken,
+           pin: pin || ''
+        })
+      });
+      if (res.ok) {
+         this.showToast(`Joined room ${code}!`, 'success');
+         document.getElementById('inputJoinRoomCode').value = '';
+         document.getElementById('inputJoinRoomPin').value = '';
+         this.fetchProfileRooms();
+      } else {
+         const data = await res.json();
+         this.showToast(data.error || `Failed to join room.`, 'error');
+      }
+    } catch (e) {
+      this.showToast('Network error.', 'error');
+    }
+  }
 }
+
 
 // Bootstrap application on DOM ready
 document.addEventListener('DOMContentLoaded', () => {

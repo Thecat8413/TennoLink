@@ -573,5 +573,84 @@
 
   <!-- Main ES Module Bootstrapper -->
   <script type="module" src="src/js/app.js"></script>
+
+  <!-- Profile & Data Purge Modal -->
+  <div id="profileModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2><span class="text-gold">MY</span> DATA</h2>
+        <button type="button" class="btn-close" id="btnCloseProfileModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="form-helper" style="margin-bottom: 1rem;">Your Gamertag and synced inventory data are completely owned by you. You can purge them entirely from the servers at any time.</p>
+        
+        <div class="summary-stats-box" style="margin-bottom: 1.5rem; background: rgba(0,0,0,0.2); padding: 1rem; border: 1px solid var(--gold-border);">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span class="text-gold">Active Gamertag:</span>
+            <span id="profileGamertagLabel" style="font-weight:bold;">---</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span class="text-gold">Active Rooms:</span>
+            <span id="profileRoomCountLabel">---</span>
+          </div>
+        </div>
+
+        <div class="danger-zone" style="border: 1px solid #d9534f; border-radius: 4px; padding: 1rem; background: rgba(217, 83, 79, 0.05);">
+          <h3 style="color: #d9534f; margin-top: 0; font-size: 0.9rem; margin-bottom: 0.5rem;">Danger Zone</h3>
+          <p class="form-helper" style="margin-bottom: 1rem;">Permanently delete your account, mastery records, and all synced relic inventories. This action cannot be undone.</p>
+          <button id="btnHardPurgeData" class="btn btn-primary" style="width: 100%; background: #d9534f; color: white; border: none;">Purge All My Data</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Panel Modal -->
+  <div id="adminModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 800px; width: 90%;">
+      <div class="modal-header">
+        <h2><span class="text-gold">SYSTEM</span> ADMIN</h2>
+        <button type="button" class="btn-close" id="btnCloseAdminModal">✕</button>
+      </div>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+        
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+          <button id="btnAdminLoadUsers" class="btn btn-secondary">Load Users</button>
+          <button id="btnAdminLoadRooms" class="btn btn-secondary">Load Rooms</button>
+        </div>
+
+        <div id="adminDataContainer" style="background: rgba(0,0,0,0.3); border: 1px solid var(--gold-border); min-height: 300px; padding: 1rem;">
+          <div style="color: var(--text-muted); text-align: center; margin-top: 4rem;">Select a category to view data.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- My Rooms Modal -->
+  <div id="roomsModal" class="modal-overlay">
+    <div class="modal-container" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2><span class="text-gold">MY</span> ROOMS</h2>
+        <button type="button" class="btn-close" id="btnCloseRoomsModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="form-helper" style="margin-bottom: 1rem;">You can join up to 50 rooms. Your inventory syncs to all of them automatically. Select a room to view its squad roster.</p>
+        
+        <div id="myRoomsList" style="margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; max-height: 300px; overflow-y: auto; padding-right: 0.5rem;">
+          <!-- Rooms injected here -->
+        </div>
+
+        <div style="border-top: 1px solid var(--gold-border); margin-top: 1rem; padding-top: 1rem;">
+          <h3 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--gold-primary);">Join Another Room</h3>
+          <div class="form-group" style="display: flex; gap: 0.5rem;">
+            <input type="text" id="inputJoinRoomCode" class="form-control" placeholder="Room Code (e.g. OROKIN-7741)">
+            <input type="password" id="inputJoinRoomPin" class="form-control" placeholder="PIN (Optional)" style="max-width: 120px;">
+            <button id="btnSubmitJoinRoom" class="btn btn-primary">Join</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

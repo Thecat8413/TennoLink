@@ -105,6 +105,7 @@ export class AuthManager {
           const session = {
             playerName: data.playerName,
             syncToken: data.syncToken,
+            isAdmin: !!data.isAdmin,
             loggedInAt: Date.now()
           };
           this.saveSession(session);

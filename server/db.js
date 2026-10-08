@@ -68,6 +68,7 @@ function initSchema() {
       player_name TEXT PRIMARY KEY,
       password_hash TEXT NOT NULL,
       sync_token TEXT NOT NULL,
+      is_admin INTEGER DEFAULT 0,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );
@@ -78,6 +79,9 @@ function initSchema() {
     // Migrate old column name to new column name if it exists
     db.exec(`ALTER TABLE player_accounts RENAME COLUMN pin_hash TO password_hash;`);
   } catch {}
+
+  try {
+    db.exec(`ALTER TABLE player_accounts ADD COLUMN is_admin INTEGER DEFAULT 0;`);
 
   // 3. Squad Members Table
   db.exec(`
