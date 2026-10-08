@@ -74,6 +74,11 @@ function initSchema() {
     CREATE INDEX IF NOT EXISTS idx_accounts_token ON player_accounts(sync_token);
   `);
 
+  try {
+    // Migrate old column name to new column name if it exists
+    db.exec(`ALTER TABLE player_accounts RENAME COLUMN pin_hash TO password_hash;`);
+  } catch {}
+
   // 3. Squad Members Table
   db.exec(`
     CREATE TABLE IF NOT EXISTS members (
