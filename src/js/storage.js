@@ -1,6 +1,6 @@
 /**
  * Client Storage Layer:
- * - localStorage: Fast synchronous storage for fireteam profiles, active target, and preferences
+ * - localStorage: Fast synchronous storage for squad profiles, active target, and preferences
  * - IndexedDB: High-capacity asynchronous storage for decoded relic inventories
  */
 

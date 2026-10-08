@@ -1,5 +1,5 @@
 /**
- * Squad Fireteam Roster Manager
+ * Squad Squad Roster Manager
  */
 
 import {

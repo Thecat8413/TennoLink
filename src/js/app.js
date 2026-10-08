@@ -4,7 +4,7 @@
  * - Comprehensive Prime Source of Truth Catalog with live warframestat.us fallback
  * - Real-time Warframe.Market Platinum Pricing for sets and individual parts
  * - Canonical Relic Farming Nodes (Hepit, Apollo, Ukko, etc.) and Vault Status
- * - Cross-Fireteam Relic Stock Matrix & Radiant Trace Deficit Optimizer
+ * - Cross-Squad Relic Stock Matrix & Radiant Trace Deficit Optimizer
  * - Stacking-Safe Floating Search Dropdown
  */
 
@@ -398,7 +398,7 @@ class WarframeSquadApp {
     await this.refreshSquadData();
     this.render();
     this.renderSquadModalManageList();
-    this.showToast('Member removed from fireteam.', 'info');
+    this.showToast('Member removed from squad.', 'info');
   }
 
   openSettingsModal() {
@@ -464,7 +464,7 @@ class WarframeSquadApp {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    this.showToast('Downloaded config.json! Drop it next to TennoRelicSync.exe.', 'success');
+    this.showToast('Downloaded config.json! Drop it next to TennoLink.exe.', 'success');
   }
 
   /**

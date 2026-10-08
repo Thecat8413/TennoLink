@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Warframe Squad Relic Sync | Warframe Sync Engine</title>
-  <meta name="description" content="Cross-squad Warframe relic sync engine using AlecaFrame public tokens. Target prime warframes and weapons, cross-reference fireteam stock, and calculate radiant trace budgets.">
+  <meta name="description" content="Cross-squad Warframe relic sync engine using AlecaFrame public tokens. Target prime warframes and weapons, cross-reference squad stock, and calculate radiant trace budgets.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e5c577'><circle cx='12' cy='12' r='10' stroke='%23e5c577' stroke-width='2' fill='none'/><circle cx='12' cy='12' r='4' fill='%23e5c577'/></svg>">
   <link rel="stylesheet" href="src/css/main.css">
   <link rel="stylesheet" href="src/css/components.css">
@@ -33,7 +33,7 @@
       <!-- Center View Switcher Tabs -->
       <div class="view-tabs-container">
         <div class="view-tabs">
-          <button id="tabRelicEngine" class="view-tab active" title="Fireteam Relic Engine & Radshare Optimizer">
+          <button id="tabRelicEngine" class="view-tab active" title="Squad Relic Engine & Radshare Optimizer">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"></circle>
               <circle cx="12" cy="12" r="4"></circle>
@@ -75,14 +75,14 @@
             Room Settings
           </button>
 
-          <button id="btnManageSquad" class="btn btn-secondary btn-sm" title="Manage Fireteam Tokens">
+          <button id="btnManageSquad" class="btn btn-secondary btn-sm" title="Manage Squad Tokens">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
               <circle cx="9" cy="7" r="4"></circle>
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
               <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
             </svg>
-            Fireteam Roster
+            Squad Roster
           </button>
 
           <button id="btnDownloadCompanion" class="btn btn-secondary btn-sm" title="Download Windows Background Assistant (.exe)">
@@ -106,7 +106,7 @@
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
             </svg>
-            Sync Fireteam
+            Sync Squad
           </button>
         </div>
       </div>
@@ -114,14 +114,14 @@
 
     <!-- Relic Engine Primary View Container -->
     <div id="relicEngineView">
-      <!-- Fireteam Roster Bar (Compact Ticker) -->
+      <!-- Squad Roster Bar (Compact Ticker) -->
       <section class="glass-panel squad-bar">
       <div class="squad-roster-title">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
           <circle cx="9" cy="7" r="4"></circle>
         </svg>
-        Fireteam:
+        Squad:
       </div>
       <div id="squadRosterContainer" class="squad-roster">
         <!-- Rendered by app.js -->
@@ -200,7 +200,7 @@
         </div>
         <div class="metric-value-wrap">
           <span id="valDropOdds" class="metric-val violet">0%</span>
-          <span class="metric-desc">Cumulative fireteam completion chance</span>
+          <span class="metric-desc">Cumulative squad completion chance</span>
         </div>
       </div>
     </section>
@@ -336,7 +336,7 @@
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
-          Fireteam Roster
+          Squad Roster
         </h2>
         <button id="btnCloseSquadModal" class="btn btn-secondary btn-icon-only">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -376,7 +376,7 @@
 
         <!-- Active Squad Members List -->
         <div>
-          <label class="form-label" style="margin-bottom: 0.5rem; display: block;">Active Fireteam Members</label>
+          <label class="form-label" style="margin-bottom: 0.5rem; display: block;">Active Squad Members</label>
           <div id="squadMemberListManage" class="member-list-manage">
             <!-- Rendered by app.js -->
           </div>
@@ -481,7 +481,7 @@
 
           <!-- Download Cards Grid -->
           <div class="companion-download-grid">
-            <a href="https://github.com/Thecat8413/warframe-helper/releases/latest/download/TennoRelicSync.exe" download="TennoRelicSync.exe" class="companion-download-card" id="btnDownloadExe">
+            <a href="https://github.com/Thecat8413/TennoLink/releases/latest/download/TennoLink.exe" download="TennoLink.exe" class="companion-download-card" id="btnDownloadExe">
               <div class="card-icon-area">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -496,7 +496,7 @@
               <div class="card-size-badge">11 MB</div>
             </a>
 
-            <a href="https://github.com/Thecat8413/warframe-helper/releases/latest/download/TennoRelicSync.zip" download="TennoRelicSync.zip" class="companion-download-card" id="btnDownloadZip">
+            <a href="https://github.com/Thecat8413/TennoLink/releases/latest/download/TennoLink.zip" download="TennoLink.zip" class="companion-download-card" id="btnDownloadZip">
               <div class="card-icon-area">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gold">
                   <polyline points="21 8 21 21 3 21 3 8"></polyline>
@@ -563,7 +563,7 @@
             </button>
           </div>
           <div style="font-size: 0.72rem; color: var(--text-faint); margin-bottom: 0.4rem;">
-            Save alongside <code>TennoRelicSync.exe</code> or right-click the system tray icon to configure:
+            Save alongside <code>TennoLink.exe</code> or right-click the system tray icon to configure:
           </div>
           <pre id="companionConfigPreview" style="margin: 0; padding: 0.45rem 0.65rem; background: rgba(0,0,0,0.6); border: 1px solid var(--border-glass); border-radius: var(--radius-xs); font-size: 0.72rem; color: var(--gold-subtle); overflow-x: auto;"></pre>
         </div>

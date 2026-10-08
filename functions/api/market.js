@@ -64,7 +64,7 @@ export async function onRequest(context) {
   try {
     const upstreamResponse = await fetch(targetUrl, {
       headers: {
-        'User-Agent': 'WarframeHelper/1.0 (+https://github.com/Thecat8413/warframe-helper)',
+        'User-Agent': 'TennoLink/1.0 (+https://github.com/Thecat8413/TennoLink)',
         'Accept': 'application/json',
         'Language': 'en',
         'Platform': 'pc'

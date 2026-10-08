@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 
-namespace TennoRelicSync
+namespace TennoLink
 {
     public class AppConfig
     {
@@ -13,7 +13,7 @@ namespace TennoRelicSync
 
     public static class ConfigManager
     {
-        private static readonly string AppDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TennoRelicSync");
+        private static readonly string AppDataFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TennoLink");
         private static readonly string ConfigPath = Path.Combine(AppDataFolder, "config.json");
 
         public static AppConfig Load()

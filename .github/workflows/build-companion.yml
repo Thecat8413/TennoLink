@@ -1,4 +1,4 @@
-name: Build & Release TennoRelicSync
+name: Build & Release TennoLink
 
 on:
   push:
@@ -34,16 +34,16 @@ jobs:
         run: |
           cd companion-cs
           dotnet publish -c Release -r win-x64 --self-contained true -o ../publish
-          Move-Item -Path ../publish/TennoRelicSync.exe -Destination ../TennoRelicSync.exe -Force
-          Compress-Archive -Path ../TennoRelicSync.exe -DestinationPath ../TennoRelicSync.zip -Force
+          Move-Item -Path ../publish/TennoLink.exe -Destination ../TennoLink.exe -Force
+          Compress-Archive -Path ../TennoLink.exe -DestinationPath ../TennoLink.zip -Force
 
       - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TennoRelicSync-Windows-x64
+          name: TennoLink-Windows-x64
           path: |
-            TennoRelicSync.exe
-            TennoRelicSync.zip
+            TennoLink.exe
+            TennoLink.zip
           if-no-files-found: error
 
       - name: Publish to GitHub Releases (Continuous Latest)
@@ -53,8 +53,8 @@ jobs:
           tag_name: latest
           name: Latest Companion Build
           files: |
-            TennoRelicSync.exe
-            TennoRelicSync.zip
+            TennoLink.exe
+            TennoLink.zip
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

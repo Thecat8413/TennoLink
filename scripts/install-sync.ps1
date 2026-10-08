@@ -19,13 +19,13 @@ $defaultPlayer = $env:USERNAME
 $playerName = Read-Host "Enter your Warframe Player Name / Gamertag (default: $defaultPlayer)"
 if ([string]::IsNullOrWhiteSpace($playerName)) { $playerName = $defaultPlayer }
 
-$roomCode = Read-Host "Enter Fireteam Room Code (optional, leave blank to sync to personal profile only)"
+$roomCode = Read-Host "Enter Squad Room Code (optional, leave blank to sync to personal profile only)"
 
 $autoStart = Read-Host "Start automatically when you log into Windows? (Y/n)"
 $enableAutoStart = ($autoStart -ne "n" -and $autoStart -ne "N")
 
 # 2. Setup Installation Directory
-$installDir = "$env:APPDATA\TennoRelicSync"
+$installDir = "$env:APPDATA\TennoLink"
 if (-not (Test-Path $installDir)) {
     New-Item -ItemType Directory -Path $installDir -Force | Out-Null
 }
@@ -72,7 +72,7 @@ Set-Content -Path "$installDir\run-sync.ps1" -Value $runnerContent -Encoding UTF
 
 # 7. Configure Windows Startup
 $startupFolder = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Startup)
-$shortcutPath = "$startupFolder\TennoRelicSync.lnk"
+$shortcutPath = "$startupFolder\TennoLink.lnk"
 
 if ($enableAutoStart) {
     $wsh = New-Object -ComObject WScript.Shell

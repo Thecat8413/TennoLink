@@ -1,16 +1,16 @@
 services:
-  warframe-helper:
+  TennoLink:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: warframe-helper
+    container_name: TennoLink
     restart: unless-stopped
     ports:
       # Map to host port. Can be bound to 127.0.0.1:3000 to keep it strictly behind a reverse proxy,
       # or 0.0.0.0:3000 for direct private LAN / WireGuard subnet access.
       - "${HOST_BIND_IP:-0.0.0.0}:${PORT:-3000}:3000"
     volumes:
-      # Persistent SQLite storage for squad rooms, fireteam syncs, and mastery records
+      # Persistent SQLite storage for squad rooms, squad syncs, and mastery records
       - ./data:/app/data
     environment:
       - PORT=3000

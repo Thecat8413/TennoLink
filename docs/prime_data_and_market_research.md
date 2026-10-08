@@ -69,7 +69,7 @@ Warframe relics fall into two distinct operational states:
 ### 3.1 State 1: Vaulted Relics
 - **Mission Drops:** **None.** They cannot be earned from standard starchart missions, bounties, or Void fissures.
 - **Acquisition Channels:**
-  1. **Existing Fireteam Stock:** What the squad sync engine displays from member tokens.
+  1. **Existing Squad Stock:** What the squad sync engine displays from member tokens.
   2. **Prime Resurgence:** Purchased from Varzia in Maroo's Bazaar using Aya (earned from bounties and Void capture).
   3. **Player-to-Player Trading:** Purchased from other players on `warframe.market` using Platinum.
 
@@ -95,7 +95,7 @@ Active relics drop from specific mission reward rotations. The community maintai
 
 ### 4.1 Upstream Rules & Constraints
 Warframe.market provides public APIs for order books and market statistics, but enforces strict client rules:
-1. **Mandatory Custom User-Agent:** Requests without a custom `User-Agent` (or with generic browser/curl headers) receive **HTTP 403 Forbidden**. Format: `WarframeHelper/1.0 (+https://github.com/Thecat8413/warframe-helper)`.
+1. **Mandatory Custom User-Agent:** Requests without a custom `User-Agent` (or with generic browser/curl headers) receive **HTTP 403 Forbidden**. Format: `TennoLink/1.0 (+https://github.com/Thecat8413/TennoLink)`.
 2. **Rate Limits:** Enforces **3 requests per second**. Rapid requests trigger Cloudflare IP blocking.
 3. **No Direct Browser Fetch:** Because of Cloudflare bot protection and CORS policies, market requests must pass through our Cloudflare Pages edge proxy.
 
@@ -181,7 +181,7 @@ flowchart TD
 ## 6. Implementation Blueprint
 
 ```
-/Volumes/DevRepos/warframe-helper/
+/Volumes/DevRepos/TennoLink/
 ├── functions/
 │   └── api/
 │       ├── alecaframe.js         # Existing AlecaFrame Public Token Proxy

@@ -1,7 +1,7 @@
 /**
  * Mastery Assistant & Target Pursuer Controller
  * Vitruvian Orokin aesthetic, personal MR telemetry, crafting readiness scanner,
- * and 1-click pursuit linking to the Fireteam Relic Engine.
+ * and 1-click pursuit linking to the Squad Relic Engine.
  * 
  * Powered by complete offline dataset of all 799 masterable Warframe items:
  * Warframes, Primaries, Secondaries, Melees, Companions, and Archwings.

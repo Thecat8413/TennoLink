@@ -43,7 +43,7 @@ export async function handleMarketRequest(req, res, url) {
   try {
     const upstreamRes = await fetch(targetUrl, {
       headers: {
-        'User-Agent': 'WarframeHelper-SelfHosted/1.0 (+https://github.com/Thecat8413/warframe-helper)',
+        'User-Agent': 'TennoLink-SelfHosted/1.0 (+https://github.com/Thecat8413/TennoLink)',
         'Accept': 'application/json',
         'Language': 'en',
         'Platform': 'pc'

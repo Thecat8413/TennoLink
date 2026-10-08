@@ -9,7 +9,7 @@ The container listens internally on port `3000`.
 ## 1. Caddyfile (Recommended for Simplicity)
 ```caddy
 warframe.myhome.net {
-    reverse_proxy warframe-helper:3000 {
+    reverse_proxy TennoLink:3000 {
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
         header_up X-Forwarded-Proto {scheme}
@@ -53,7 +53,7 @@ server {
 Uncomment the labels in `docker-compose.yml`:
 ```yaml
 services:
-  warframe-helper:
+  TennoLink:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.warframe.rule=Host(`warframe.myhome.net`)"

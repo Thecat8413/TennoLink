@@ -88,7 +88,7 @@ const server = http.createServer(async (req, res) => {
       return handleAlecaframeRequest(req, res, url);
     }
 
-    // Route: Fireteam Squad Management
+    // Route: Squad Squad Management
     if (url.pathname.startsWith('/api/squad')) {
       return handleSquadRequest(req, res, url, body);
     }

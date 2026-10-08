@@ -30,8 +30,8 @@
    - Real-time **Warframe.Market v2 pricing** for sets and individual components with local persistent caching.
    - Canonical speed-farming nodes (Hepit, Ukko, Apollo Lua 4-3-2-1 strategy) and Vault status.
 
-6. **Cross-Fireteam Relic Stock Matrix:**
-   - Synchronize up to 4 fireteam members in a shared squad room.
+6. **Cross-Squad Relic Stock Matrix:**
+   - Synchronize up to 4 squad members in a shared squad room.
    - Immediate detection of formable 4-player Radshares.
    - Calculates the exact Void Trace bill per squad member to refine stock to Radiant.
 
@@ -42,8 +42,8 @@
 ### 1. Launch the Stack
 ```bash
 # Clone the repository
-git clone https://github.com/Thecat8413/warframe-helper.git
-cd warframe-helper
+git clone https://github.com/Thecat8413/TennoLink.git
+cd TennoLink
 
 # (Optional) Customize environment
 cp .env.example .env

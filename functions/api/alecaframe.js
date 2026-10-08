@@ -77,7 +77,7 @@ export async function onRequest(context) {
   try {
     const upstreamResponse = await fetch(targetUrl, {
       headers: {
-        'User-Agent': 'WarframeHelper-CFPages/1.0 (Squad Relic Sync Engine)',
+        'User-Agent': 'TennoLink-CFPages/1.0 (Squad Relic Sync Engine)',
         'Accept': endpoint === 'relics' ? 'application/octet-stream, application/json' : 'application/json',
       },
     });

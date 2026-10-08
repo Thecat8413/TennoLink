@@ -1,5 +1,5 @@
 /**
- * Fireteam Squad Management & Multi-Player Sync Handler
+ * Squad Squad Management & Multi-Player Sync Handler
  * Supports persistent room creation with optional 4-digit PINs,
  * cross-player stock merging, and real-time updates
  */
@@ -12,9 +12,9 @@ export async function handleSquadRequest(req, res, url, body) {
   const action = pathParts[0] || '';
   const subAction = pathParts[1] || '';
 
-  // 1. POST /api/squad/create - Create a new persistent fireteam room (with optional 4-digit PIN)
+  // 1. POST /api/squad/create - Create a new persistent squad room (with optional 4-digit PIN)
   if (method === 'POST' && (action === 'create' || action === '')) {
-    const name = body?.name || 'Orokin Fireteam';
+    const name = body?.name || 'Orokin Squad';
     const code = body?.code || `OROKIN-${Math.floor(1000 + Math.random() * 9000)}`;
     const pin = body?.pin ? String(body.pin).trim() : null;
 
@@ -116,7 +116,7 @@ export async function handleSquadRequest(req, res, url, body) {
       return;
     }
 
-    Database.savePlayerInventory(roomCode, playerName, relics, mastery, components, rawHash);
+    Database.savePlayerInventory(playerName, relics, mastery, components, rawHash);
 
     if (mastery && Array.isArray(mastery)) {
       Database.saveMasteryRecords(playerName, mastery);

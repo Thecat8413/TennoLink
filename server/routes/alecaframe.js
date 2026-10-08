@@ -41,7 +41,7 @@ export async function handleAlecaframeRequest(req, res, url) {
   try {
     const upstreamRes = await fetch(targetUrl, {
       headers: {
-        'User-Agent': 'WarframeHelper-SelfHosted/1.0',
+        'User-Agent': 'TennoLink-SelfHosted/1.0',
         'Accept': 'application/json'
       }
     });

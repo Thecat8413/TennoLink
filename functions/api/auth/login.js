@@ -1,6 +1,6 @@
 /**
  * Cloudflare Pages Function: /api/auth/login
- * Handles player login & verification with Gamertag + 4-Digit PIN at the edge
+ * Handles player login & verification with Gamertag + Password at the edge
  */
 
 export async function onRequest(context) {
@@ -28,7 +28,7 @@ export async function onRequest(context) {
   try {
     const body = await request.json();
     const playerName = body?.playerName?.trim();
-    const pin = String(body?.pin || '').trim();
+    const password = String(body?.password || body?.pin || '').trim();
 
     if (!playerName) {
       return new Response(JSON.stringify({ ok: false, error: 'Please enter your Gamertag' }), {
@@ -37,8 +37,8 @@ export async function onRequest(context) {
       });
     }
 
-    if (!pin || pin.length !== 4) {
-      return new Response(JSON.stringify({ ok: false, error: 'PIN must be exactly 4 digits' }), {
+    if (!password) {
+      return new Response(JSON.stringify({ ok: false, error: 'Password is required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });

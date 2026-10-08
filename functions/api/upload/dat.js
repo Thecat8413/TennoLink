@@ -86,11 +86,13 @@ export async function onRequest(context) {
     if (env.DB && roomCode) {
       try {
         await env.DB.prepare(`
-          INSERT INTO inventories (id, room_code, player_name, relics_json, mastery_json, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?)
+          INSERT INTO inventories (id, room_code, player_name, relics_json, mastery_json, components_json, raw_hash, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET
             relics_json = excluded.relics_json,
             mastery_json = excluded.mastery_json,
+            components_json = excluded.components_json,
+            raw_hash = excluded.raw_hash,
             updated_at = excluded.updated_at
         `).bind(
           `inv_${roomCode}_${playerName}`,
@@ -98,6 +100,8 @@ export async function onRequest(context) {
           playerName,
           JSON.stringify(sanitized.relics),
           JSON.stringify(sanitized.mastery),
+          JSON.stringify(sanitized.components),
+          '',
           Date.now()
         ).run();
       } catch (dbErr) {

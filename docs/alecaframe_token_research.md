@@ -269,7 +269,7 @@ export async function onRequest(context) {
   if (!response) {
     const upstream = await fetch(targetUrl, {
       headers: {
-        'User-Agent': 'WarframeHelper-CFPages/1.0',
+        'User-Agent': 'TennoLink-CFPages/1.0',
         'Accept': endpoint === 'relics' ? 'application/octet-stream, application/json' : 'application/json'
       }
     });

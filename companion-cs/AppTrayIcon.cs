@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TennoRelicSync
+namespace TennoLink
 {
     public class AppTrayIcon : IDisposable
     {
@@ -36,7 +36,7 @@ namespace TennoRelicSync
             {
                 Icon = CreateColoredIcon(Color.Gold),
                 ContextMenuStrip = _contextMenu,
-                Text = "TennoRelicSync - Idle",
+                Text = "TennoLink - Idle",
                 Visible = true
             };
 
@@ -45,6 +45,26 @@ namespace TennoRelicSync
 
             InitializeWatchers();
             TriggerSync(); // Initial sync
+            Task.Run(() => CheckForUpdates());
+        }
+
+        private async void CheckForUpdates()
+        {
+            try
+            {
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Add("User-Agent", "TennoLink Updater");
+                var response = await client.GetAsync("https://api.github.com/repos/Thecat8413/TennoLink/releases/latest");
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    if (json.Contains("\"tag_name\"") && !json.Contains("\"v1.0.0\""))
+                    {
+                        _notifyIcon.ShowBalloonTip(5000, "Update Available", "A new version of TennoLink is available on GitHub!", ToolTipIcon.Info);
+                    }
+                }
+            }
+            catch (Exception ex) { Logger.Log("Update check failed: " + ex.Message); }
         }
 
         private void SetStatus(string status, Color iconColor)
@@ -55,7 +75,7 @@ namespace TennoRelicSync
             {
                 var oldIcon = _notifyIcon.Icon;
                 _notifyIcon.Icon = CreateColoredIcon(iconColor);
-                _notifyIcon.Text = $"TennoRelicSync - {status}".Substring(0, Math.Min(63, status.Length + 17));
+                _notifyIcon.Text = $"TennoLink - {status}".Substring(0, Math.Min(63, status.Length + 17));
                 if (oldIcon != null) DestroyIcon(oldIcon.Handle);
             }
             catch { }
