@@ -94,14 +94,6 @@
             Assistant (.exe)
           </button>
 
-          <button id="btnDownloadPowerShell" class="btn btn-secondary btn-sm" title="Download PowerShell Background Agent (AV Safe Alternative)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="4 17 10 11 4 5"></polyline>
-              <line x1="12" y1="19" x2="20" y2="19"></line>
-            </svg>
-            Agent (.ps1)
-          </button>
-
           <button id="btnSyncSquad" class="btn btn-primary btn-sm" title="Sync All Squad Relics from AlecaFrame">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
@@ -314,7 +306,7 @@
               <input type="password" id="inputRoomPin" class="form-input" placeholder="••••">
             </div>
           </div>
-          <span class="form-helper">Changing rooms will clear your current local squad roster to prevent ghost data.</span>
+          <span class="form-helper">Join a room to sync and compare relics with your squad.</span>
           <button type="button" id="btnUpdateRoom" class="btn btn-secondary btn-xs" style="align-self: flex-end;">Set / Join Room</button>
         </div>
       </div>
@@ -446,7 +438,7 @@
             <span class="badge badge-cyan" style="font-size: 0.65rem;">100% Antivirus Immune</span>
           </div>
           <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.65rem;">
-            No software download required. Directly drag and drop your <code>lastData.dat</code> (AlecaFrame) or <code>inventory.json</code> (WFHelper) below to sync relics and mastery instantly:
+            Directly drag and drop your AlecaFrame <code>lastData.dat</code> below to upload your local inventory:
           </p>
 
           <div id="companionWebDropzone" class="companion-dropzone">
@@ -456,7 +448,7 @@
               <line x1="12" y1="3" x2="12" y2="15"></line>
             </svg>
             <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-main);">
-              Drag & Drop <code>lastData.dat</code> or <code>inventory.json</code>
+              Drag & Drop <code>lastData.dat</code>
             </div>
             <div style="font-size: 0.7rem; color: var(--text-faint);">
               or <span style="color: var(--gold-primary); text-decoration: underline;">click to browse files</span>
@@ -465,7 +457,7 @@
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.45rem; font-size: 0.68rem; color: var(--text-faint);">
             <span>Default Path: <code>%LOCALAPPDATA%\AlecaFrame\lastData.dat</code></span>
-            <span>WFHelper: <code>%APPDATA%\WFHelper\api-helper\inventory.json</code></span>
+            
           </div>
         </div>
 

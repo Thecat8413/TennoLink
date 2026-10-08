@@ -43,7 +43,31 @@ export async function handleSquadRequest(req, res, url, body) {
   }
 
   // Check 4-digit PIN if room has one
-  const providedPin = body?.pin || url.searchParams.get('pin') || req.headers['x-room-pin'];
+  
+    const authHeader = req.headers['authorization'];
+    let authenticatedUser = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '').trim();
+      authenticatedUser = Database.getPlayerByToken(token);
+    }
+
+    if (method === 'POST' && (subAction === 'join' || subAction === 'sync')) {
+      if (!authenticatedUser) {
+        res.writeHead(401, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: false, error: 'Unauthorized. Valid Bearer token required.' }));
+        return;
+      }
+      let reqPlayer = '';
+      try { reqPlayer = body?.playerName?.trim(); } catch(e){}
+      
+      if (reqPlayer && reqPlayer.toLowerCase() !== authenticatedUser.toLowerCase()) {
+        res.writeHead(403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: false, error: 'Forbidden. You can only modify your own data.' }));
+        return;
+      }
+    }
+    
+    const providedPin = body?.pin || url.searchParams.get('pin') || req.headers['x-room-pin'];
   const pinCheck = Database.verifyRoomPin(roomCode, providedPin);
 
   // 3. GET /api/squad/:code - Get room details, members, and aggregated inventories

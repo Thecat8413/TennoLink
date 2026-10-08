@@ -1,0 +1,40 @@
+# TennoLink Codebase Master Checklist
+
+- [x] `index.html` - **Fixed**: Removed obsolete PS1 agent button, config.json download, hardcoded download sizes, and ghost data text.
+- [x] `src/css/main.css` - **Reviewed**: Vitruvian theme is clean.
+- [x] `src/css/components.css` - **Reviewed**: UI component styles.
+- [x] `src/js/app.js` - **Fixed**: Removed unused config.json download methods and PS1 download logic.
+- [x] `src/js/squadManager.js`
+- [x] `src/js/authManager.js` - **Reviewed**: Logic is solid. Fallback authentication is properly partitioned from backend fetch.
+- [x] `src/js/api.js` - **Reviewed**: Pure AlecaFrame proxy. No tech debt found.
+- [x] `src/js/binaryDecoder.js` - **Reviewed**: Byte parsing logic is exact.
+- [x] `src/js/marketClient.js` - **Reviewed**: Logic is sound, gracefully degrades to simulated prices if offline.
+- [x] `src/js/masteryController.js` - **Reviewed**: Works correctly. Fetches remote data from `/api/mastery/:player`.
+- [x] `src/js/primeRepository.js` - **Reviewed**: Static data wrapper.
+- [x] `src/js/probability.js` - **Reviewed**: Math constants.
+- [x] `src/js/storage.js` - **Reviewed**: LocalStorage wrappers.
+- [x] `src/data/allPrimes.js` - **Reviewed**: Static DB.
+- [x] `src/data/primeRelicMap.js` - **Reviewed**: Static DB.
+- [x] `src/data/relicFarmingNodes.js` - **Reviewed**: Static DB.
+- [x] `src/data/warframeItems.js` - **Reviewed**: Static DB.
+- [x] `functions/api/alecaframe.js` - **Reviewed**: Caches properly, no debt.
+- [x] `functions/api/market.js` - **Reviewed**: Works correctly as an upstream edge proxy.
+- [x] `functions/api/mastery/[player].js` - **Fixed**: Upgraded from mock data to actual D1 `inventories` queries with Bearer auth.
+- [x] `functions/api/squad/[[path]].js` - **Fixed**: Added strict Bearer token checking to prevent IDOR.
+- [x] `functions/api/upload/dat.js` - **Fixed**: Wiped AES key, expects JSON, strictly enforces Basic/Bearer Auth.
+- [x] `functions/api/auth/login.js` - **Fixed**: Rewrote to use proper SHA-256 validation against D1.
+- [x] `server/index.js` - **Fixed**: Updated `/api/upload/dat` to require Basic or Bearer Authentication to match the Edge parity.
+- [x] `server/db.js` - **Fixed**: Added `getPlayerByToken()` logic to allow token-based resolution.
+- [x] `server/datParser.js` - **Reviewed**: Logic is purely data sanitization. Handles AES securely without leaking.
+- [x] `server/routes/alecaframe.js` - **Reviewed**: Proxy works identically to Edge.
+- [x] `server/routes/market.js` - **Reviewed**: Proxy works identically to Edge.
+- [x] `server/routes/mastery.js` - **Reviewed**: Handles local DB records correctly.
+- [x] `server/routes/squad.js` - **Fixed**: Implemented strict Bearer Token IDOR protection, mirroring Cloudflare Edge.
+- [x] `server/routes/auth.js` - **Reviewed**: Core authentication provider for local Docker DB.
+- [x] `companion-cs/Program.cs` - **Reviewed**: Core initialization.
+- [x] `companion-cs/AppTrayIcon.cs` - **Fixed**: Now decrypts AES locally and uses Basic Auth.
+- [x] `companion-cs/Config.cs` - **Reviewed**: Data model.
+- [x] `companion-cs/SettingsForm.cs` - **Reviewed**: GUI logic.
+- [x] `companion-cs/TennoLink.csproj` - **Reviewed**: Build targets.
+- [x] `companion-cs/TennoLink.iss` - **Reviewed**: InnoSetup script.
+- [x] `scripts/generate-warframe-items.js` - **Reviewed**: Static data compiler.

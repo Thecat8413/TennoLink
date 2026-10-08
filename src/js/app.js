@@ -129,11 +129,9 @@ class WarframeSquadApp {
 
     // Companion Desktop Assistant Modal
     this.btnDownloadCompanion = document.getElementById('btnDownloadCompanion');
-    this.btnDownloadPowerShell = document.getElementById('btnDownloadPowerShell');
     this.companionModal = document.getElementById('companionModal');
     this.btnCloseCompanionModal = document.getElementById('btnCloseCompanionModal');
     this.btnCloseCompanionModalFooter = document.getElementById('btnCloseCompanionModalFooter');
-    this.btnDownloadConfigJson = document.getElementById('btnDownloadConfigJson');
     this.companionConfigPreview = document.getElementById('companionConfigPreview');
     this.companionWebDropzone = document.getElementById('companionWebDropzone');
     this.inputWebDropzoneFile = document.getElementById('inputWebDropzoneFile');
@@ -205,17 +203,7 @@ class WarframeSquadApp {
     if (this.btnDownloadCompanion) {
       this.btnDownloadCompanion.addEventListener('click', () => this.openCompanionModal());
     }
-    if (this.btnDownloadPowerShell) {
-      this.btnDownloadPowerShell.addEventListener('click', () => {
-        const a = document.createElement('a');
-        a.href = 'sync-agent.ps1';
-        a.download = 'sync-agent.ps1';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        this.showToast('PowerShell Background Agent downloaded.', 'info');
-      });
-    }
+
     if (this.btnCloseCompanionModal) {
       this.btnCloseCompanionModal.addEventListener('click', () => this.closeCompanionModal());
     }
@@ -227,9 +215,7 @@ class WarframeSquadApp {
         if (e.target === this.companionModal) this.closeCompanionModal();
       });
     }
-    if (this.btnDownloadConfigJson) {
-      this.btnDownloadConfigJson.addEventListener('click', () => this.handleDownloadConfigJson());
-    }
+
 
     if (this.btnCloseSquadModalFooter) {
       this.btnCloseSquadModalFooter.addEventListener('click', () => this.closeSquadModal());
@@ -443,29 +429,7 @@ class WarframeSquadApp {
     }
   }
 
-  handleDownloadConfigJson() {
-    const activePlayer = this.authManager.getCurrentPlayer() || 'Tenno';
-    const roomCode = this.activeRoom || 'OROKIN-7741';
-    const serverUrl = window.location.origin;
 
-    const config = {
-      serverUrl: serverUrl,
-      playerName: activePlayer,
-      roomCode: roomCode
-    };
-
-    const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'config.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    this.showToast('Downloaded config.json! Drop it next to TennoLink.exe.', 'success');
-  }
 
   /**
    * Handle direct file uploads (.dat or .json) with zero-install, zero-download web processing

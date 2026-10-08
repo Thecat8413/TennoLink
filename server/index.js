@@ -123,12 +123,26 @@ const server = http.createServer(async (req, res) => {
         const sanitized = sanitizeInventory(decryptedRaw);
 
         const playerName = url.searchParams.get('player') || 'Tenno';
-        const password = url.searchParams.get('password') || '';
+        const authHeader = req.headers['authorization'];
+        
+        let isAuthenticated = false;
+        if (authHeader && authHeader.startsWith('Basic ')) {
+          const b64 = authHeader.replace('Basic ', '');
+          const decoded = Buffer.from(b64, 'base64').toString('utf8');
+          const [user, pwd] = decoded.split(':');
+          if (user.toLowerCase() === playerName.toLowerCase()) {
+            const auth = Database.authenticatePlayer(user, pwd);
+            if (auth.ok || auth.isNew) isAuthenticated = true;
+          }
+        } else if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.replace('Bearer ', '').trim();
+          const valid = Database.verifyToken(playerName, token);
+          if (valid) isAuthenticated = true;
+        }
 
-        const auth = Database.authenticatePlayer(playerName, password);
-        if (!auth.ok && !auth.isNew) {
+        if (!isAuthenticated) {
           res.writeHead(401, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-          res.end(JSON.stringify({ ok: false, error: auth.error }));
+          res.end(JSON.stringify({ ok: false, error: 'Unauthorized. Invalid Basic or Bearer token.' }));
           return;
         }
 
