@@ -1,111 +1,97 @@
-# Warframe Squad Relic Sync & Mastery Engine (Self-Hosted Edition)
+# TennoLink
 
-> A high-performance, self-hosted Warframe relic synchronization engine, radshare optimizer, and persistent mastery tracker. Built with a sleek **Warframe Sync aesthetic**, running on **Docker Compose** with persistent **SQLite storage**.
+> A high-performance, edge-hosted Warframe relic synchronization engine, radshare optimizer, and persistent mastery tracker. Built with a sleek **Vitruvian aesthetic**, designed natively for **Cloudflare Pages + D1 Serverless Edge** with full support for **Self-Hosted Docker** deployments.
 
 ---
 
-## 🏛️ Key Features
+## 🏛️ Architecture & Paradigm Shift
 
-1. **Warframe Sync Interface:**
-   - Authentic *The Sacrifice* aesthetic featuring warm obsidian backgrounds, hairline gold filigree, parchment typography, and compact high-density tables.
-   - Clean, low-scroll layout designed for multi-monitor setups and quick in-mission glanceability.
+**User-Owned Data:** In TennoLink, your data belongs to *you*, not a specific room. Your persistent inventory and mastery data are stored securely under your Gamertag. You can freely join and leave temporary **Squad Rooms** to sync, compare, and build Radshares with friends, bringing your data with you seamlessly.
 
-2. **Self-Hosted & Private-First (Docker Compose):**
-   - **Zero Cloud Lock-in**: Run completely on your own homelab, server, or VPS.
-   - **Long-Term Data Persistence**: Persistent SQLite database (`./data/warframe.db`) preserves player profiles, historical mastery, and squad inventories permanently.
-   - **LAN & WireGuard VPN Ready**: Operate strictly on your private local network or WireGuard mesh without exposing any ports to the public internet.
-   - **Reverse Proxy Friendly**: Drop directly behind Caddy, Traefik, Nginx, or Nginx Proxy Manager with SSL termination.
+**Edge Security:** Fully secured API endpoints. The edge API authenticates native companions using `Basic Auth` and web interfaces using `Bearer Tokens`, completely eliminating spoofing, unauthorized overwrites, and IDOR vulnerabilities. Decryption of sensitive local files is fully isolated to the client.
 
-3. **AlecaFrame `lastData.dat` Auto-Sync:**
-   - Native support for AlecaFrame's local `%LOCALAPPDATA%\AlecaFrame\lastData.dat` file.
-   - Decrypts standard AES-128-CBC and applies **Zero-Knowledge Sanitization**—extracts *only* Mastery XP and Relic quantities while purging all personal tokens, Platinum, and Credit balances.
-   - Background PowerShell companion script (`scripts/sync-agent.ps1`) automatically syncs inventories whenever missions conclude.
+---
 
-4. **Persistent Mastery Rank Tracker:**
+## ✨ Key Features
+
+1. **Native Windows Companion (`TennoLink-Setup.exe`):**
+   - A lightweight C# System Tray application that automatically detects and reads your local `%LOCALAPPDATA%\AlecaFrame\lastData.dat` file.
+   - **Client-Side Decryption:** Decrypts AES-128-CBC locally. Your raw binary files and decryption keys are *never* transmitted over the internet.
+   - **Zero-Knowledge Sanitization:** Securely pushes *only* your Relic quantities and Mastery XP to the server.
+   - Supports **Auto-Start on Login** and background auto-updates via GitHub Releases.
+
+2. **Web Sync Option (Token-less Proxy):**
+   - Don't want to install the `.exe`? Simply paste your AlecaFrame Public Token directly into the TennoLink Web UI. The UI will securely fetch your inventory and proxy it to the central database, keeping you synced with your squad instantly.
+
+3. **Persistent Mastery Rank Tracker:**
    - Tracks equipment XP and Mastery completion across Warframes, Primaries, Secondaries, Melees, Companions, Archwings, and Necramechs.
-   - Historical records survive server restarts and browser cache clears.
+   - Historical records are securely saved to the Cloudflare D1 or local SQLite database.
 
-5. **Complete Prime Source of Truth Catalog:**
-   - 145+ Prime items imported locally across all categories (Warframes, Weapons, Companions, Archwings).
-   - Real-time **Warframe.Market v2 pricing** for sets and individual components with local persistent caching.
-   - Canonical speed-farming nodes (Hepit, Ukko, Apollo Lua 4-3-2-1 strategy) and Vault status.
-
-6. **Cross-Squad Relic Stock Matrix:**
+4. **Cross-Squad Relic Stock Matrix:**
    - Synchronize up to 4 squad members in a shared squad room.
    - Immediate detection of formable 4-player Radshares.
    - Calculates the exact Void Trace bill per squad member to refine stock to Radiant.
 
+5. **Vitruvian Interface:**
+   - Authentic aesthetic featuring warm obsidian backgrounds, hairline gold filigree, and compact high-density tables designed for multi-monitor glanceability.
+
 ---
 
-## 🚀 Quick Start with Docker Compose
+## 🚀 Deployment Options
 
-### 1. Launch the Stack
+TennoLink supports two deployment models depending on your needs.
+
+### Option A: Cloudflare Pages & D1 (Recommended / Serverless)
+
+TennoLink is built natively for Cloudflare's Edge network, meaning you can host it for free with zero maintenance.
+
+1. Fork this repository.
+2. In the Cloudflare Dashboard, create a new **D1 Database** named `tennolink-db`.
+3. Link your GitHub repository to **Cloudflare Pages**.
+4. Set up the D1 Binding in your Pages project settings (`DB` -> `tennolink-db`).
+5. Deploy! The application will automatically create the required database tables (`player_accounts`, `inventories`, `rooms`, `members`) upon first boot via the edge router.
+
+### Option B: Self-Hosted Docker Compose (Homelab)
+
+If you prefer to keep your data completely isolated on your own network:
+
 ```bash
 # Clone the repository
 git clone https://github.com/Thecat8413/TennoLink.git
 cd TennoLink
 
-# (Optional) Customize environment
-cp .env.example .env
-
-# Start with Docker Compose
+# Start the stack
 docker compose up -d
 ```
-
-Open your browser to:
-**`http://localhost:3000`** (or your server's LAN / WireGuard IP).
+Your persistent SQLite database will be created in `./data/warframe.db`, and the web UI will be accessible at `http://localhost:3000`.
 
 ---
 
-## ⚙️ Configuration & Environment
+## 📥 Installing the Companion App
 
-Configuration options in `.env`:
+1. Navigate to the **Releases** tab on GitHub.
+2. Download `TennoLink-Setup.exe`.
+3. Run the installer. You can choose to automatically start the companion when you log into Windows.
+4. Once running, double-click the gold diamond icon in your system tray to open Settings.
+5. Enter your Server URL (e.g., `https://tennolink.pages.dev` or `http://localhost:3000`), your Gamertag, and your Password.
 
-| Variable | Default | Description |
-| :--- | :--- | :--- |
-| `PORT` | `3000` | Host port exposed by Docker container. |
-| `HOST_BIND_IP` | `0.0.0.0` | IP to bind on host (`127.0.0.1` for reverse proxy, `0.0.0.0` for LAN/WireGuard). |
-| `DATA_DIR` | `/app/data` | Container path for the persistent SQLite database. |
-| `NODE_ENV` | `production` | Environment mode. |
-
----
-
-## 🔒 Reverse Proxy & WireGuard Setup
-
-### A. Caddy
-```caddy
-warframe.myhome.net {
-    reverse_proxy 127.0.0.1:3000
-}
-```
-
-### B. Nginx / Nginx Proxy Manager
-Forward incoming requests to `http://127.0.0.1:3000` with `client_max_body_size 10M;`. Full example in [docs/reverse-proxy.md](docs/reverse-proxy.md).
-
-### C. Local LAN / WireGuard Only
-In `.env`, set `HOST_BIND_IP=0.0.0.0`. Teammates on your WireGuard network connect directly to `http://10.x.x.x:3000`.
+The companion will silently sync your data in the background whenever your Warframe inventory changes!
 
 ---
 
-## 🔄 AlecaFrame Auto-Sync Companion
+## 🛠️ Development & Building
 
-To automatically sync your local inventory from your gaming PC to your self-hosted server:
+### Building the C# Companion
+The `TennoLink-Setup.exe` installer is automatically built via GitHub Actions (`build-companion.yml`) using the Inno Setup Compiler (`ISCC.exe`).
 
-```powershell
-# In PowerShell on your gaming PC:
-.\scripts\sync-agent.ps1 -ServerUrl "https://warframe.myhome.net" -PlayerName "YourGamertag" -Password "YourPassword"
-```
-
-The script watches `%LOCALAPPDATA%\AlecaFrame\lastData.dat` and automatically posts sanitized updates whenever your inventory changes.
-
----
-
-## 🛠️ Native Node.js Run (Without Docker)
-
-You can also run natively on any machine with Node.js 22+:
-
+To compile manually:
 ```bash
-# Start the server
+cd companion-cs
+dotnet publish -c Release -r win-x64 --self-contained true
+```
+
+### Running the Node.js Server Locally
+```bash
+npm install
 npm start
 ```
-The server will initialize the SQLite database at `./data/warframe.db` and listen on port `3000`.
