@@ -112,7 +112,7 @@ export class AuthManager {
         }
       } else if (res.status === 401) {
         const data = await res.json().catch(() => ({}));
-        return { ok: false, error: data.error || 'Incorrect 4-digit PIN for this Gamertag' };
+        return { ok: false, error: data.error || 'Incorrect Password for this Gamertag' };
       }
     } catch (e) {
       // Backend unavailable; proceed with client-side authentication fallback
@@ -120,7 +120,7 @@ export class AuthManager {
     }
 
     // Client-side fallback authentication
-    const pinHash = await this.hashPin(cleanName, cleanPin);
+    const passwordHash = await this.hashPassword(cleanName, cleanPassword);
     const existingAccountsKey = 'wf_tenno_accounts';
     let accounts = {};
     try {
@@ -130,14 +130,14 @@ export class AuthManager {
     }
 
     if (accounts[cleanName]) {
-      if (accounts[cleanName].pinHash !== pinHash) {
-        return { ok: false, error: 'Incorrect 4-digit PIN for this Gamertag' };
+      if (accounts[cleanName].passwordHash !== passwordHash && accounts[cleanName].pinHash !== passwordHash) {
+        return { ok: false, error: 'Incorrect Password for this Gamertag' };
       }
     } else {
       // Register new account locally
       accounts[cleanName] = {
         playerName: cleanName,
-        pinHash,
+        passwordHash,
         token: `tok_${Math.random().toString(36).substr(2, 9)}`,
         createdAt: Date.now()
       };

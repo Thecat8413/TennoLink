@@ -93,7 +93,7 @@ To automatically sync your local inventory from your gaming PC to your self-host
 
 ```powershell
 # In PowerShell on your gaming PC:
-.\scripts\sync-agent.ps1 -ServerUrl "https://warframe.myhome.net" -PlayerName "YourGamertag" -RoomCode "OROKIN-42"
+.\scripts\sync-agent.ps1 -ServerUrl "https://warframe.myhome.net" -PlayerName "YourGamertag" -Password "YourPassword"
 ```
 
 The script watches `%LOCALAPPDATA%\AlecaFrame\lastData.dat` and automatically posts sanitized updates whenever your inventory changes.

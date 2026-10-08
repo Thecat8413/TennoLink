@@ -6,6 +6,7 @@
 param(
     [string]$ServerUrl = "http://localhost:3000",
     [string]$PlayerName = $env:USERNAME,
+    [string]$Password = "",
     [string]$RoomCode = "",
     [switch]$Watch = $true
 )
@@ -58,7 +59,9 @@ function Send-Sync {
     try {
         $fileBytes = [System.IO.File]::ReadAllBytes($path)
         $endpoint = "$ServerUrl/api/upload/dat?player=$([Uri]::EscapeDataString($PlayerName))"
-        if ($RoomCode) {
+        if ($Password) {
+            $endpoint += "&password=$([Uri]::EscapeDataString($Password))"
+        } elseif ($RoomCode) {
             $endpoint += "&room=$([Uri]::EscapeDataString($RoomCode))"
         }
 
