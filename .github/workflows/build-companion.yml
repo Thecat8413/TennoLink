@@ -26,19 +26,26 @@ jobs:
           cd companion-cs
           dotnet publish -c Release -r win-x64 --self-contained true -o ../publish
           Move-Item -Path ../publish/TennoRelicSync.exe -Destination ../TennoRelicSync.exe -Force
+          Compress-Archive -Path ../TennoRelicSync.exe -DestinationPath ../TennoRelicSync.zip -Force
 
       - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4
         with:
           name: TennoRelicSync-Windows-x64
-          path: TennoRelicSync.exe
+          path: |
+            TennoRelicSync.exe
+            TennoRelicSync.zip
           if-no-files-found: error
 
-      - name: Publish to GitHub Releases (On Version Tag)
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Publish to GitHub Releases (Continuous Latest)
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          files: TennoRelicSync.exe
-          generate_release_notes: true
+          tag_name: latest
+          name: Latest Companion Build
+          files: |
+            TennoRelicSync.exe
+            TennoRelicSync.zip
+          make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

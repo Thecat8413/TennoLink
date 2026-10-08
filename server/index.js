@@ -122,10 +122,17 @@ const server = http.createServer(async (req, res) => {
         const decryptedRaw = decryptLastDataDat(rawBuffer);
         const sanitized = sanitizeInventory(decryptedRaw);
 
-        // Auto-sync to a room or personal store
-        const roomCode = url.searchParams.get('room') || 'PERSONAL';
         const playerName = url.searchParams.get('player') || 'Tenno';
-        Database.savePlayerInventory(roomCode, playerName, sanitized.relics, sanitized.mastery, sanitized.components);
+        const password = url.searchParams.get('password') || '';
+
+        const auth = Database.authenticatePlayer(playerName, password);
+        if (!auth.ok && !auth.isNew) {
+          res.writeHead(401, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.end(JSON.stringify({ ok: false, error: auth.error }));
+          return;
+        }
+
+        Database.savePlayerInventory(playerName, sanitized.relics, sanitized.mastery, sanitized.components);
 
         // Automatically update long-term mastery profile
         if (sanitized.mastery.length > 0) {

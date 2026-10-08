@@ -8,7 +8,7 @@ namespace TennoRelicSync
     {
         public string ServerUrl { get; set; } = "http://localhost:3000";
         public string PlayerName { get; set; } = "Tenno";
-        public string RoomCode { get; set; } = "";
+        public string Password { get; set; } = "";
     }
 
     public static class ConfigManager

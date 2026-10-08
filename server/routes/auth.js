@@ -1,6 +1,6 @@
 /**
  * Player Authentication Handler
- * Supports Gamertag + 4-digit PIN authentication with persistent session tokens
+ * Supports Gamertag + Password authentication with persistent session tokens
  */
 
 import { Database } from '../db.js';
@@ -13,7 +13,7 @@ export async function handleAuthRequest(req, res, url, body) {
   // 1. POST /api/auth/login
   if (method === 'POST' && action === 'login') {
     const playerName = body?.playerName?.trim();
-    const pin = String(body?.pin || '').trim();
+    const password = String(body?.password || body?.pin || '').trim(); // fallback to pin for older clients
 
     if (!playerName) {
       res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -21,13 +21,13 @@ export async function handleAuthRequest(req, res, url, body) {
       return;
     }
 
-    if (!pin || pin.length < 4) {
+    if (!password) {
       res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-      res.end(JSON.stringify({ ok: false, error: 'Please enter a 4-digit PIN' }));
+      res.end(JSON.stringify({ ok: false, error: 'Please enter a password' }));
       return;
     }
 
-    const result = Database.authenticatePlayer(playerName, pin);
+    const result = Database.authenticatePlayer(playerName, password);
     if (!result.ok) {
       res.writeHead(401, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({ ok: false, error: result.error }));
