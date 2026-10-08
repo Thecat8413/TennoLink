@@ -740,7 +740,7 @@ class WarframeSquadApp {
     }
   }
 
-  handleUpdateRoom() {
+  async handleUpdateRoom() {
     const code = this.inputRoomCode?.value.trim().toUpperCase() || 'OROKIN-7741';
     const pin = this.inputRoomPin?.value.trim() || '';
 
@@ -750,6 +750,14 @@ class WarframeSquadApp {
     if (this.labelCurrentRoom) this.labelCurrentRoom.textContent = code;
     this.authManager.saveRoomPin(code, pin);
     this.showToast(`Active room set to ${code}${pin ? ' (Protected with PIN)' : ''}`, 'success');
+
+    // Immediately trigger a background sync to join and fetch data
+    const changed = await this.squadManager.syncRoomMembers(this.activeRoom);
+    if (changed) {
+      await this.refreshSquadData();
+      this.render();
+      this.renderSquadModalManageList();
+    }
   }
 
   // -------------------------------------------------------------

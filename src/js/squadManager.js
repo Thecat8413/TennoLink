@@ -99,6 +99,16 @@ export class SquadManager {
       const relics = await this.client.fetchRelicInventory(member.token, member.isMock);
       await saveMemberRelics(member.id, relics);
 
+      try {
+         await fetch(`/api/upload/dat?player=${encodeURIComponent(member.name)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ InventoryJson: relics })
+         });
+      } catch (e) {
+         console.error('Failed to broadcast token sync to server', e);
+      }
+
       // Sum total quantity
       const totalCount = relics.reduce((sum, r) => sum + r.count, 0);
 
@@ -170,24 +180,37 @@ export class SquadManager {
    */
   async syncRoomMembers(roomCode) {
     if (!roomCode) return;
+
+    const sessionStr = window.localStorage.getItem('wf_tenno_session');
+    const session = sessionStr ? JSON.parse(sessionStr) : null;
+    const currentActivePlayer = session ? session.playerName : null;
+
+    if (currentActivePlayer) {
+      try {
+        await fetch(`/api/squad/${encodeURIComponent(roomCode)}/join`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ playerName: currentActivePlayer })
+        });
+      } catch (e) {}
+    }
+
     try {
-      const response = await fetch(`/api/room/sync?room=${encodeURIComponent(roomCode)}`);
+      const response = await fetch(`/api/squad/${encodeURIComponent(roomCode)}`);
       if (!response.ok) return;
       const data = await response.json();
-      if (!data.ok || !data.members) return;
+      if (!data.ok || !data.members || !data.inventories) return;
 
       let changed = false;
       for (const remoteMember of data.members) {
-        // Skip if this is the current player to avoid echoing local data back
-        const currentActivePlayer = window.localStorage.getItem('wf_tenno_session') 
-          ? JSON.parse(window.localStorage.getItem('wf_tenno_session')).playerName
-          : null;
         if (currentActivePlayer && currentActivePlayer.toLowerCase() === remoteMember.playerName.toLowerCase()) continue;
+
+        const inv = data.inventories[remoteMember.playerName];
+        if (!inv) continue;
 
         let localMember = this.members.find(m => m.name.toLowerCase() === remoteMember.playerName.toLowerCase());
         
-        // If we have a newer sync locally, skip
-        if (localMember && localMember.lastSync && new Date(localMember.lastSync) >= new Date(remoteMember.updatedAt)) {
+        if (localMember && localMember.lastSync && new Date(localMember.lastSync) >= new Date(inv.updated_at)) {
           continue;
         }
 
@@ -200,18 +223,18 @@ export class SquadManager {
             isMock: false,
             color: SQUAD_COLORS[colorIndex],
             totalRelics: 0,
-            lastSync: remoteMember.updatedAt,
+            lastSync: inv.updated_at,
             syncStatus: 'synced',
             error: null
           };
           this.members.push(localMember);
         }
 
-        await saveMemberRelics(localMember.id, remoteMember.relics);
-        const totalCount = remoteMember.relics.reduce((sum, r) => sum + (r.count || 1), 0);
+        await saveMemberRelics(localMember.id, inv.relics);
+        const totalCount = inv.relics.reduce((sum, r) => sum + (r.count || 1), 0);
         
         localMember.totalRelics = totalCount;
-        localMember.lastSync = remoteMember.updatedAt;
+        localMember.lastSync = inv.updated_at;
         localMember.syncStatus = 'synced';
         localMember.error = null;
         changed = true;
