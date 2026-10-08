@@ -37,6 +37,10 @@ jobs:
           Move-Item -Path ../publish/TennoLink.exe -Destination ../TennoLink.exe -Force
           Compress-Archive -Path ../TennoLink.exe -DestinationPath ../TennoLink.zip -Force
 
+      - name: Compile Inno Setup Installer
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" companion-cs\TennoLink.iss
+
       - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -44,6 +48,7 @@ jobs:
           path: |
             TennoLink.exe
             TennoLink.zip
+            TennoLink-Setup.exe
           if-no-files-found: error
 
       - name: Publish to GitHub Releases (Continuous Latest)
@@ -55,6 +60,7 @@ jobs:
           files: |
             TennoLink.exe
             TennoLink.zip
+            TennoLink-Setup.exe
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
