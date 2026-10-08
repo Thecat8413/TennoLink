@@ -21,7 +21,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "startupicon"; Description: "Start TennoLink automatically on Windows login"; GroupDescription: "Startup:"
 
 [Files]
-Source: "..\publish\TennoLink.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\TennoLink.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\TennoLink"; Filename: "{app}\TennoLink.exe"
