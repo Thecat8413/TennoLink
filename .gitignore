@@ -10,3 +10,5 @@ dist/
 [Bb]in/
 [Oo]bj/
 [Pp]ublish/
+*.exe
+*.zip
