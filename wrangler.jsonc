@@ -9,5 +9,12 @@
   "assets": {
     "directory": ".",
     "binding": "ASSETS"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tennolink-db",
+      "database_id": "<INSERT_YOUR_D1_DATABASE_ID_HERE>"
+    }
+  ]
 }
