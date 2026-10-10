@@ -38,29 +38,46 @@ export async function onRequest(context) {
       code TEXT UNIQUE NOT NULL,
       name TEXT NOT NULL,
       pin TEXT,
+      owner_name TEXT,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );
   `).run();
+  try {
+    await env.DB.prepare('ALTER TABLE rooms ADD COLUMN owner_name TEXT').run();
+  } catch(e) {}
 
   const action = pathParts[0] || '';
   const subAction = pathParts[1] || '';
   const method = request.method;
 
   try {
+    const url = new URL(request.url);
+    let body = null;
+    if (method === 'POST' || method === 'DELETE') {
+      try { body = await request.json(); } catch(e){}
+    }
+
+    // --- AUTHENTICATION CHECK ---
+    const authHeader = request.headers.get('Authorization');
+    let authenticatedUser = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.replace('Bearer ', '').trim();
+      const account = await env.DB.prepare('SELECT player_name FROM player_accounts WHERE sync_token = ?').bind(token).first();
+      if (account) authenticatedUser = account.player_name;
+    }
+
     // 1. POST /api/squad/create
     if (method === 'POST' && (action === 'create' || action === '')) {
-      let body = {};
-      try { body = await request.json(); } catch(e){}
-      
       const name = body?.name || 'Orokin Squad';
       const code = body?.code || `OROKIN-${Math.floor(1000 + Math.random() * 9000)}`;
       const pin = body?.pin ? String(body.pin).trim() : null;
+      const owner = authenticatedUser || 'Unknown';
 
       await env.DB.prepare(`
-        INSERT INTO rooms (id, code, name, pin, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).bind(code, code, name, pin, Date.now(), Date.now()).run();
+        INSERT INTO rooms (id, code, name, pin, owner_name, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).bind(code, code, name, pin, owner, Date.now(), Date.now()).run();
 
       return new Response(JSON.stringify({ ok: true, room: { code, name, hasPin: !!pin } }), { status: 201, headers: corsHeaders });
     }
@@ -73,24 +90,23 @@ export async function onRequest(context) {
 
     const roomCode = action.toUpperCase();
     
-    // Ensure room exists
-    const roomRecord = await env.DB.prepare(`SELECT code, name, pin, updated_at FROM rooms WHERE code = ?`).bind(roomCode).first();
+    let roomRecord = await env.DB.prepare(`SELECT code, name, pin, owner_name, updated_at FROM rooms WHERE code = ?`).bind(roomCode).first();
+    
     if (!roomRecord) {
-      return new Response(JSON.stringify({ ok: false, error: `Squad room '${roomCode}' not found` }), { status: 404, headers: corsHeaders });
-    }
-
-    const url = new URL(request.url);
-    let body = null;
-    if (method === 'POST') {
-      try { body = await request.json(); } catch(e) {}
-    }
-    // --- AUTHENTICATION CHECK ---
-    const authHeader = request.headers.get('Authorization');
-    let authenticatedUser = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.replace('Bearer ', '').trim();
-      const account = await env.DB.prepare('SELECT player_name FROM player_accounts WHERE sync_token = ?').bind(token).first();
-      if (account) authenticatedUser = account.player_name;
+      if (method === 'POST' && subAction === 'join') {
+        if (!authenticatedUser) {
+          return new Response(JSON.stringify({ ok: false, error: 'Unauthorized to auto-create room. Valid Bearer token required.' }), { status: 401, headers: corsHeaders });
+        }
+        const providedPin = body?.pin || url.searchParams.get('pin') || request.headers.get('x-room-pin');
+        await env.DB.prepare(`
+          INSERT INTO rooms (id, code, name, pin, owner_name, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).bind(roomCode, roomCode, `${roomCode} Squad`, providedPin, authenticatedUser, Date.now(), Date.now()).run();
+        
+        roomRecord = { code: roomCode, name: `${roomCode} Squad`, pin: providedPin, owner_name: authenticatedUser, updated_at: Date.now() };
+      } else {
+        return new Response(JSON.stringify({ ok: false, error: `Squad room '${roomCode}' not found` }), { status: 404, headers: corsHeaders });
+      }
     }
 
     // Require Auth for mutations
@@ -106,8 +122,7 @@ export async function onRequest(context) {
         return new Response(JSON.stringify({ ok: false, error: 'Forbidden. You can only modify your own data.' }), { status: 403, headers: corsHeaders });
       }
     }
-    // ----------------------------
-    
+
     const providedPin = body?.pin || url.searchParams.get('pin') || request.headers.get('x-room-pin');
     
     if (roomRecord.pin && roomRecord.pin !== providedPin) {
@@ -136,7 +151,7 @@ export async function onRequest(context) {
 
       return new Response(JSON.stringify({
         ok: true,
-        room: { code: roomRecord.code, name: roomRecord.name, hasPin: !!roomRecord.pin, updated_at: roomRecord.updated_at },
+        room: { code: roomRecord.code, name: roomRecord.name, hasPin: !!roomRecord.pin, owner_name: roomRecord.owner_name, updated_at: roomRecord.updated_at },
         members,
         inventories
       }), { status: 200, headers: corsHeaders });
@@ -174,25 +189,58 @@ export async function onRequest(context) {
     if (method === 'DELETE' && subAction === 'leave') {
       const playerName = body?.playerName?.trim() || authenticatedUser;
       
-      
       if (!playerName) {
         return new Response(JSON.stringify({ ok: false, error: 'Missing playerName' }), { status: 400, headers: corsHeaders });
       }
-      
-      const { results: currentRooms } = await env.DB.prepare('SELECT room_code FROM members WHERE player_name = ?').bind(playerName).all();
-      if (currentRooms.length >= 50 && !currentRooms.some(r => r.room_code === roomCode)) {
-        return new Response(JSON.stringify({ ok: false, error: 'Maximum of 50 rooms reached. Please leave a room before joining another.' }), { status: 400, headers: corsHeaders });
-      }
 
-
-      // If user isn't admin and tries to remove someone else, block
       if (playerName.toLowerCase() !== authenticatedUser.toLowerCase()) {
-         // TODO: if isAdmin, let them do it? For now just block. Admins use /api/admin
          return new Response(JSON.stringify({ ok: false, error: 'Forbidden. You can only remove yourself.' }), { status: 403, headers: corsHeaders });
       }
 
       await env.DB.prepare('DELETE FROM members WHERE room_code = ? AND player_name = ?').bind(roomCode, playerName).run();
       return new Response(JSON.stringify({ ok: true, message: `Left room ${roomCode}` }), { status: 200, headers: corsHeaders });
+    }
+
+    if (method === 'DELETE' && subAction === 'kick') {
+      if (roomRecord.owner_name?.toLowerCase() !== authenticatedUser.toLowerCase()) {
+        return new Response(JSON.stringify({ ok: false, error: 'Only the room owner can kick members.' }), { status: 403, headers: corsHeaders });
+      }
+      
+      const targetPlayer = body?.playerName?.trim();
+      if (!targetPlayer) {
+        return new Response(JSON.stringify({ ok: false, error: 'Missing playerName.' }), { status: 400, headers: corsHeaders });
+      }
+      
+      if (targetPlayer.toLowerCase() === roomRecord.owner_name?.toLowerCase()) {
+        return new Response(JSON.stringify({ ok: false, error: 'Owner cannot kick themselves.' }), { status: 400, headers: corsHeaders });
+      }
+
+      await env.DB.prepare('DELETE FROM members WHERE room_code = ? AND player_name = ?').bind(roomCode, targetPlayer).run();
+      return new Response(JSON.stringify({ ok: true, message: `Kicked ${targetPlayer} from room.` }), { status: 200, headers: corsHeaders });
+    }
+
+    if (method === 'POST' && subAction === 'transfer') {
+      if (roomRecord.owner_name?.toLowerCase() !== authenticatedUser.toLowerCase()) {
+        return new Response(JSON.stringify({ ok: false, error: 'Only the room owner can transfer ownership.' }), { status: 403, headers: corsHeaders });
+      }
+      
+      const newOwner = body?.newOwner?.trim();
+      if (!newOwner) {
+        return new Response(JSON.stringify({ ok: false, error: 'Missing newOwner.' }), { status: 400, headers: corsHeaders });
+      }
+      
+      await env.DB.prepare('UPDATE rooms SET owner_name = ?, updated_at = ? WHERE code = ?').bind(newOwner, Date.now(), roomCode).run();
+      return new Response(JSON.stringify({ ok: true, message: `Ownership transferred to ${newOwner}.` }), { status: 200, headers: corsHeaders });
+    }
+
+    if (method === 'DELETE' && !subAction) {
+      if (roomRecord.owner_name?.toLowerCase() !== authenticatedUser.toLowerCase()) {
+        return new Response(JSON.stringify({ ok: false, error: 'Only the room owner can delete the room.' }), { status: 403, headers: corsHeaders });
+      }
+      
+      await env.DB.prepare('DELETE FROM members WHERE room_code = ?').bind(roomCode).run();
+      await env.DB.prepare('DELETE FROM rooms WHERE code = ?').bind(roomCode).run();
+      return new Response(JSON.stringify({ ok: true, message: `Room ${roomCode} deleted.` }), { status: 200, headers: corsHeaders });
     }
 
     if (method === 'POST' && subAction === 'sync') {

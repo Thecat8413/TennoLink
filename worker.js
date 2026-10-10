@@ -9,6 +9,7 @@ import { onRequest as handleAlecaframe } from './functions/api/alecaframe.js';
 import { onRequest as handleAuthLogin } from './functions/api/auth/login.js';
 import { onRequest as handleUploadDat } from './functions/api/upload/dat.js';
 import { onRequest as handleMastery } from './functions/api/mastery/[player].js';
+import { onRequest as handleSquad } from './functions/api/squad/[[path]].js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -43,6 +44,12 @@ export default {
       const parts = url.pathname.split('/api/mastery/');
       context.params.player = parts[1] ? decodeURIComponent(parts[1]) : 'Tenno';
       return handleMastery(context);
+    }
+
+    if (url.pathname.startsWith('/api/squad/')) {
+      const parts = url.pathname.replace('/api/squad/', '').split('/').filter(Boolean);
+      context.params.path = parts;
+      return handleSquad(context);
     }
 
     // Health probe
