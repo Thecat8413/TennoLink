@@ -58,7 +58,7 @@ class WarframeSquadApp {
         this.render();
         this.renderSquadModalManageList();
       }
-    }, 15000);
+    }, 3000);
     
     // Initial fetch
     setTimeout(async () => {
@@ -176,6 +176,36 @@ class WarframeSquadApp {
       });
     }
 
+    // Modals Close Handling
+    const adminModal = document.getElementById('adminModal');
+    if (adminModal) {
+       document.getElementById('btnCloseAdminModal')?.addEventListener('click', () => adminModal.classList.remove('open'));
+       adminModal.addEventListener('click', (e) => { if (e.target === adminModal) adminModal.classList.remove('open'); });
+    }
+
+    const roomsModal = document.getElementById('roomsModal');
+    if (roomsModal) {
+       document.getElementById('btnCloseRoomsModal')?.addEventListener('click', () => roomsModal.classList.remove('open'));
+       roomsModal.addEventListener('click', (e) => { if (e.target === roomsModal) roomsModal.classList.remove('open'); });
+    }
+
+    const profileModal = document.getElementById('profileModal');
+    if (profileModal) {
+       document.getElementById('btnCloseProfileModal')?.addEventListener('click', () => profileModal.classList.remove('open'));
+       profileModal.addEventListener('click', (e) => { if (e.target === profileModal) profileModal.classList.remove('open'); });
+       const btnHardPurge = document.getElementById('btnHardPurgeData');
+       if (btnHardPurge) {
+          btnHardPurge.addEventListener('click', () => {
+             const input = prompt("Type 'DELETE' to confirm you want to permanently purge all data.");
+             if (input === 'DELETE') {
+                this.handleHardPurge();
+             } else if (input !== null) {
+                this.showToast('Purge cancelled. You must type DELETE exactly.', 'info');
+             }
+          });
+       }
+    }
+
     // Room update
     if (this.btnUpdateRoom) {
       this.btnUpdateRoom.addEventListener('click', () => this.handleUpdateRoom());
@@ -257,9 +287,6 @@ class WarframeSquadApp {
         }
       });
     }
-
-    // Form add member
-    this.formAddMember.addEventListener('submit', (e) => this.handleAddMember(e));
 
     // Search and Category Filters
     this.targetSearchInput.addEventListener('input', (e) => {
@@ -373,7 +400,7 @@ class WarframeSquadApp {
     if (icon) icon.classList.add('animate-spin');
 
     try {
-      this.showToast('Synchronizing squad relic inventories from AlecaFrame...', 'info');
+      this.showToast('Synchronizing squad relic inventories from Server...', 'info');
       await this.squadManager.syncAllMembers();
       await this.refreshSquadData();
       this.render();
@@ -386,29 +413,7 @@ class WarframeSquadApp {
     }
   }
 
-  async handleAddMember(e) {
-    e.preventDefault();
-    const name = this.inputMemberName.value.trim();
-    const token = this.inputMemberToken.value.trim();
 
-    if (!token) {
-      this.showToast('Please provide an AlecaFrame Public Token', 'error');
-      return;
-    }
-
-    this.showToast(`Adding ${name || 'member'} and importing relics...`, 'info');
-    try {
-      await this.squadManager.addMember(name, token);
-      await this.refreshSquadData();
-      this.inputMemberName.value = '';
-      this.inputMemberToken.value = '';
-      this.render();
-      this.renderSquadModalManageList();
-      this.showToast(`Successfully added ${name}!`, 'success');
-    } catch (err) {
-      this.showToast(`Failed to add member: ${err.message}`, 'error');
-    }
-  }
 
   async handleRemoveMember(memberId) {
     await this.squadManager.removeMember(memberId);
@@ -625,6 +630,7 @@ class WarframeSquadApp {
     }
     
     const player = this.authManager.getCurrentPlayer();
+    const session = this.authManager.getSession();
     let badgeHtml = '';
 
     if (player) {
@@ -669,9 +675,39 @@ class WarframeSquadApp {
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
           </svg>
-          View Mastery Dossier
+          Mastery Dossier
         </button>
-        <button id="btnLogout" class="btn btn-secondary btn-sm" style="justify-content: flex-start; width: 100%; margin-bottom: 0.5rem;">
+        <button id="btnMyRooms" class="btn btn-secondary btn-sm" style="justify-content: flex-start; width: 100%;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          </svg>
+          My Rooms
+        </button>
+        <button id="btnMyData" class="btn btn-secondary btn-sm" style="justify-content: flex-start; width: 100%;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+          My Data (Purge)
+        </button>
+        ${session && session.isAdmin ? `
+        <button id="btnAdminPanel" class="btn btn-primary btn-sm" style="justify-content: flex-start; width: 100%; background: #d9534f; color: white;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          System Admin
+        </button>
+        ` : `
+        <button id="btnClaimAdmin" class="btn btn-secondary btn-sm" style="justify-content: flex-start; width: 100%; color: #d9534f; border-color: #d9534f;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 22h20L12 2z"></path>
+          </svg>
+          Claim Admin (Setup)
+        </button>
+        `}
+        <button id="btnLogout" class="btn btn-secondary btn-sm" style="justify-content: flex-start; width: 100%; margin-bottom: 0.5rem; margin-top: 0.5rem;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
             <polyline points="16 17 21 12 16 7"></polyline>
@@ -749,6 +785,35 @@ class WarframeSquadApp {
       }
     });
 
+    const btnAdminPanel = this.userProfileArea.querySelector('#btnAdminPanel');
+    if (btnAdminPanel) btnAdminPanel.addEventListener('click', (e) => {
+      e.stopPropagation(); newDropdownMenu.style.display = 'none';
+      const modal = document.getElementById('adminModal');
+      if (modal) {
+        modal.classList.add('open');
+        this.fetchAdminData();
+      }
+    });
+
+    const btnMyRooms = this.userProfileArea.querySelector('#btnMyRooms');
+    if (btnMyRooms) btnMyRooms.addEventListener('click', (e) => {
+      e.stopPropagation(); newDropdownMenu.style.display = 'none';
+      const modal = document.getElementById('roomsModal');
+      if (modal) {
+        modal.classList.add('open');
+        this.fetchUserRooms();
+      }
+    });
+
+    const btnMyData = this.userProfileArea.querySelector('#btnMyData');
+    if (btnMyData) btnMyData.addEventListener('click', (e) => {
+      e.stopPropagation(); newDropdownMenu.style.display = 'none';
+      const modal = document.getElementById('profileModal');
+      if (modal) {
+        modal.classList.add('open');
+      }
+    });
+
     const btnOpen = this.userProfileArea.querySelector('#btnOpenAuthModal');
     if (btnOpen) {
       btnOpen.addEventListener('click', () => {
@@ -757,6 +822,76 @@ class WarframeSquadApp {
       });
     }
   }
+  async fetchAdminData() {
+    const session = this.authManager.getSession();
+    if (!session) return;
+    try {
+      const res = await fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${session.syncToken}` }});
+      const data = await res.json();
+      const list = document.getElementById('adminUsersList');
+      if (list && data.ok) {
+        list.innerHTML = data.users.map(u => `<div>${u.playerName} (Admin: ${u.isAdmin})</div>`).join('');
+      } else if (list) {
+        list.innerHTML = `<div style="color:red;">Error: ${data.error}</div>`;
+      }
+    } catch(e) {}
+  }
+
+  async fetchUserRooms() {
+    const session = this.authManager.getSession();
+    if (!session) return;
+    try {
+      const res = await fetch('/api/auth/profile', { headers: { 'Authorization': `Bearer ${session.syncToken}` }});
+      const data = await res.json();
+      const list = document.getElementById('myRoomsList');
+      if (list && data.ok) {
+        if (data.rooms.length > 0) {
+           list.innerHTML = '';
+           data.rooms.forEach(r => {
+              const btn = document.createElement('button');
+              btn.className = 'btn btn-secondary';
+              btn.style.textAlign = 'left';
+              btn.style.width = '100%';
+              btn.style.color = 'var(--gold-primary)';
+              btn.style.border = '1px solid var(--gold-border)';
+              btn.textContent = `Room: ${r}`;
+              btn.addEventListener('click', () => {
+                 this.activeRoom = r;
+                 saveStoredActiveRoom(r);
+                 if (this.labelCurrentRoom) this.labelCurrentRoom.textContent = r;
+                 this.handleUpdateRoom();
+                 document.getElementById('roomsModal')?.classList.remove('open');
+              });
+              list.appendChild(btn);
+           });
+        } else {
+           list.innerHTML = `<div style="color: var(--text-faint);">No active rooms</div>`;
+        }
+      }
+    } catch(e) {}
+  }
+
+  async handleHardPurge() {
+    const session = this.authManager.getSession();
+    if (!session) return;
+    try {
+      const res = await fetch('/api/auth/profile', { 
+         method: 'DELETE',
+         headers: { 'Authorization': `Bearer ${session.syncToken}` }
+      });
+      const data = await res.json();
+      if (data.ok) {
+        this.showToast('Account hard purged.', 'success');
+        this.handleLogout();
+        document.getElementById('profileModal').classList.remove('open');
+      } else {
+        this.showToast(data.error || 'Purge failed', 'error');
+      }
+    } catch(e) {
+      this.showToast('Network error', 'error');
+    }
+  }
+
 
   async handleUpdateRoom() {
     const code = this.inputRoomCode?.value.trim().toUpperCase() || 'OROKIN-7741';
@@ -1081,33 +1216,180 @@ class WarframeSquadApp {
   renderSquadModalManageList() {
     const members = this.squadManager.getMembers();
     this.squadMemberListManage.innerHTML = '';
+    
+    const activePlayer = this.authManager.getSession()?.playerName;
+    const ownerName = this.squadManager.activeRoomData?.owner_name;
+    const isOwner = activePlayer && ownerName && activePlayer.toLowerCase() === ownerName.toLowerCase();
 
-    if (members.length === 0) {
+    // Add active player to the top of the list manually since they aren't in getMembers()
+    if (activePlayer) {
+      const selfItem = document.createElement('div');
+      selfItem.className = 'member-manage-item';
+      selfItem.style.border = '1px solid var(--gold-border)';
+      selfItem.style.background = 'rgba(229, 197, 119, 0.05)';
+      selfItem.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div style="width: 12px; height: 12px; border-radius: 50%; background: var(--gold-primary);"></div>
+          <div>
+            <div style="font-weight: 600; color: #fff;">${activePlayer} (You) ${isOwner ? '👑' : ''}</div>
+            <div style="font-size: 0.75rem; color: var(--text-faint);">Active Session</div>
+          </div>
+        </div>
+        <div>
+          ${isOwner ? `<span style="font-size: 0.75rem; color: var(--gold-primary);">👑 Owner</span>` : `<button class="btn btn-secondary btn-sm btn-leave" style="color: var(--crimson-alert); border-color: rgba(239, 68, 68, 0.3);">Leave</button>`}
+        </div>
+      `;
+      if (!isOwner) {
+         selfItem.querySelector('.btn-leave')?.addEventListener('click', () => this.handleLeaveRoom(this.activeRoom));
+      }
+      this.squadMemberListManage.appendChild(selfItem);
+    }
+
+    if (members.length === 0 && !activePlayer) {
       this.squadMemberListManage.innerHTML = `<div style="color: var(--text-faint);">No squad members added yet.</div>`;
       return;
     }
 
     members.forEach(m => {
+      const isSelf = activePlayer && m.name.toLowerCase() === activePlayer.toLowerCase();
+      let actionsHtml = '';
+
+      if (isSelf) {
+         if (isOwner) {
+            actionsHtml = `<span style="font-size: 0.75rem; color: var(--gold-primary);">👑 Owner</span>`;
+         } else {
+            actionsHtml = `<button class="btn btn-secondary btn-sm btn-leave" style="color: var(--crimson-alert); border-color: rgba(239, 68, 68, 0.3);">Leave</button>`;
+         }
+      } else {
+         if (isOwner) {
+            actionsHtml = `
+              <button class="btn btn-secondary btn-sm btn-transfer" style="color: var(--gold-primary); margin-right: 0.25rem;">Transfer</button>
+              <button class="btn btn-secondary btn-sm btn-kick" style="color: var(--crimson-alert); border-color: rgba(239, 68, 68, 0.3);">Kick</button>
+            `;
+         }
+      }
+
       const item = document.createElement('div');
       item.className = 'member-manage-item';
       item.innerHTML = `
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <div style="width: 12px; height: 12px; border-radius: 50%; background: ${m.color.hex};"></div>
           <div>
-            <div style="font-weight: 600; color: #fff;">${m.name}</div>
+            <div style="font-weight: 600; color: #fff;">${m.name} ${m.name.toLowerCase() === (ownerName || '').toLowerCase() && !isSelf ? '👑' : ''}</div>
             <div style="font-size: 0.75rem; color: var(--text-faint); font-family: monospace;">
               Token: ${m.token.slice(0, 10)}... | ${m.totalRelics || 0} relics
             </div>
           </div>
         </div>
-        <button class="btn btn-secondary btn-sm" style="color: var(--crimson-alert); border-color: rgba(239, 68, 68, 0.3);">
-          Remove
-        </button>
+        <div>
+          ${actionsHtml}
+        </div>
       `;
 
-      item.querySelector('button').addEventListener('click', () => this.handleRemoveMember(m.id));
+      if (isSelf && !isOwner) {
+         item.querySelector('.btn-leave')?.addEventListener('click', () => this.handleLeaveRoom(this.activeRoom));
+      } else if (!isSelf && isOwner) {
+         item.querySelector('.btn-kick')?.addEventListener('click', () => this.handleKickMember(this.activeRoom, m.name));
+         item.querySelector('.btn-transfer')?.addEventListener('click', () => this.handleTransferOwnership(this.activeRoom, m.name));
+      }
+
       this.squadMemberListManage.appendChild(item);
     });
+
+    if (isOwner) {
+       const deleteContainer = document.createElement('div');
+       deleteContainer.style.marginTop = '1rem';
+       deleteContainer.style.paddingTop = '1rem';
+       deleteContainer.style.borderTop = '1px solid rgba(255, 255, 255, 0.1)';
+       deleteContainer.innerHTML = `<button class="btn btn-secondary" style="width: 100%; color: var(--crimson-alert); border-color: rgba(239, 68, 68, 0.5);">Delete Room</button>`;
+       deleteContainer.querySelector('button').addEventListener('click', () => this.handleDeleteRoom(this.activeRoom));
+       this.squadMemberListManage.appendChild(deleteContainer);
+    }
+  }
+
+  async handleLeaveRoom(code) {
+    if (!confirm('Leave this room?')) return;
+    const session = this.authManager.getSession();
+    try {
+      const res = await fetch(`/api/squad/${encodeURIComponent(code)}/leave`, {
+         method: 'DELETE',
+         headers: { 'Authorization': `Bearer ${session.syncToken}` }
+      });
+      if (res.ok) {
+         this.showToast('Left room successfully.', 'success');
+         this.activeRoom = '';
+         saveStoredActiveRoom('');
+         if (this.labelCurrentRoom) this.labelCurrentRoom.textContent = 'None';
+         this.squadManager.members = [];
+         this.closeSquadModal();
+         this.render();
+      } else {
+         const data = await res.json();
+         this.showToast(data.error || 'Failed to leave room.', 'error');
+      }
+    } catch(e) { this.showToast('Network error.', 'error'); }
+  }
+
+  async handleKickMember(code, playerName) {
+    if (!confirm(`Kick ${playerName} from the room?`)) return;
+    const session = this.authManager.getSession();
+    try {
+      const res = await fetch(`/api/squad/${encodeURIComponent(code)}/kick`, {
+         method: 'DELETE',
+         headers: { 'Authorization': `Bearer ${session.syncToken}`, 'Content-Type': 'application/json' },
+         body: JSON.stringify({ playerName })
+      });
+      if (res.ok) {
+         this.showToast(`Kicked ${playerName}`, 'success');
+         this.handleUpdateRoom();
+      } else {
+         const data = await res.json();
+         this.showToast(data.error || 'Failed to kick member.', 'error');
+      }
+    } catch(e) { this.showToast('Network error.', 'error'); }
+  }
+
+  async handleTransferOwnership(code, newOwner) {
+    if (!confirm(`Transfer ownership to ${newOwner}? You will no longer be the owner.`)) return;
+    const session = this.authManager.getSession();
+    try {
+      const res = await fetch(`/api/squad/${encodeURIComponent(code)}/transfer`, {
+         method: 'POST',
+         headers: { 'Authorization': `Bearer ${session.syncToken}`, 'Content-Type': 'application/json' },
+         body: JSON.stringify({ newOwner })
+      });
+      if (res.ok) {
+         this.showToast(`Transferred ownership to ${newOwner}`, 'success');
+         this.handleUpdateRoom();
+      } else {
+         const data = await res.json();
+         this.showToast(data.error || 'Failed to transfer ownership.', 'error');
+      }
+    } catch(e) { this.showToast('Network error.', 'error'); }
+  }
+
+  async handleDeleteRoom(code) {
+    const confirmText = prompt(`Type DELETE to permanently destroy room ${code}`);
+    if (confirmText !== 'DELETE') return;
+    const session = this.authManager.getSession();
+    try {
+      const res = await fetch(`/api/squad/${encodeURIComponent(code)}`, {
+         method: 'DELETE',
+         headers: { 'Authorization': `Bearer ${session.syncToken}` }
+      });
+      if (res.ok) {
+         this.showToast('Room deleted.', 'success');
+         this.activeRoom = '';
+         saveStoredActiveRoom('');
+         if (this.labelCurrentRoom) this.labelCurrentRoom.textContent = 'None';
+         this.squadManager.members = [];
+         this.closeSquadModal();
+         this.render();
+      } else {
+         const data = await res.json();
+         this.showToast(data.error || 'Failed to delete room.', 'error');
+      }
+    } catch(e) { this.showToast('Network error.', 'error'); }
   }
 
   showToast(message, type = 'info') {
@@ -1152,13 +1434,19 @@ class WarframeSquadApp {
          this.showToast(`Joined room ${code}!`, 'success');
          document.getElementById('inputJoinRoomCode').value = '';
          document.getElementById('inputJoinRoomPin').value = '';
-         this.fetchProfileRooms();
+         this.activeRoom = code.toUpperCase();
+         saveStoredActiveRoom(this.activeRoom);
+         if (this.labelCurrentRoom) this.labelCurrentRoom.textContent = this.activeRoom;
+         this.handleUpdateRoom();
+         document.getElementById('roomsModal')?.classList.remove('open');
+         this.fetchUserRooms();
       } else {
          const data = await res.json();
          this.showToast(data.error || `Failed to join room.`, 'error');
       }
     } catch (e) {
-      this.showToast('Network error.', 'error');
+      console.error(e);
+      this.showToast('Network error: ' + e.message, 'error');
     }
   }
 }

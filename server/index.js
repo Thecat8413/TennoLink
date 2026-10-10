@@ -12,6 +12,7 @@ import { handleAlecaframeRequest } from './routes/alecaframe.js';
 import { handleSquadRequest } from './routes/squad.js';
 import { handleMasteryRequest } from './routes/mastery.js';
 import { handleAuthRequest } from './routes/auth.js';
+import { handleAdminRequest } from './routes/admin.js';
 import { decryptLastDataDat, sanitizeInventory } from './datParser.js';
 import { Database } from './db.js';
 
@@ -98,6 +99,11 @@ const server = http.createServer(async (req, res) => {
       return handleMasteryRequest(req, res, url, body);
     }
 
+    
+    // Route: Admin
+    if (url.pathname.startsWith('/api/admin')) {
+      return handleAdminRequest(req, res, url, body);
+    }
     // Route: Player Authentication (Gamertag + 4-digit PIN)
     if (url.pathname.startsWith('/api/auth')) {
       return handleAuthRequest(req, res, url, body);

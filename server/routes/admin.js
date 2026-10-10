@@ -1,6 +1,7 @@
-import Database from '../db.js';
+import { Database } from '../db.js';
 
-export function handleAdminRoutes(req, res, url, method) {
+export function handleAdminRequest(req, res, url, body) {
+  const method = req.method;
   const parts = url.pathname.split('/').filter(Boolean);
   const action = parts[2]; // /api/admin/:action
   const targetId = parts[3] ? decodeURIComponent(parts[3]) : null;

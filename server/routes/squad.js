@@ -12,13 +12,21 @@ export async function handleSquadRequest(req, res, url, body) {
   const action = pathParts[0] || '';
   const subAction = pathParts[1] || '';
 
-  // 1. POST /api/squad/create - Create a new persistent squad room (with optional 4-digit PIN)
+  // Extract authenticated user globally
+  const authHeader = req.headers['authorization'];
+  let authenticatedUser = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.replace('Bearer ', '').trim();
+    authenticatedUser = Database.getPlayerByToken(token);
+  }
+
+  // 1. POST /api/squad/create - Create a new persistent squad room
   if (method === 'POST' && (action === 'create' || action === '')) {
     const name = body?.name || 'Orokin Squad';
     const code = body?.code || `OROKIN-${Math.floor(1000 + Math.random() * 9000)}`;
     const pin = body?.pin ? String(body.pin).trim() : null;
 
-    const room = Database.createRoom(code, name, pin);
+    const room = Database.createRoom(code, name, pin, authenticatedUser);
 
     res.writeHead(201, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
     res.end(JSON.stringify({ ok: true, room }));
@@ -34,43 +42,68 @@ export async function handleSquadRequest(req, res, url, body) {
   }
 
   const roomCode = action.toUpperCase();
-  const room = Database.getRoom(roomCode);
+  let room = Database.getRoom(roomCode);
 
   if (!room) {
-    res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-    res.end(JSON.stringify({ ok: false, error: `Squad room '${roomCode}' not found` }));
+    if (method === 'POST' && subAction === 'join') {
+      if (!authenticatedUser) {
+        res.writeHead(401, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: false, error: 'Unauthorized to auto-create room. Valid Bearer token required.' }));
+        return;
+      }
+      const providedPin = body?.pin || url.searchParams.get('pin') || req.headers['x-room-pin'];
+      room = Database.createRoom(roomCode, `${roomCode} Squad`, providedPin, authenticatedUser);
+    } else {
+      res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: `Squad room '${roomCode}' not found` }));
+      return;
+    }
+  }
+
+  // Permissions for modifying room data
+  if (method === 'POST' && (subAction === 'join' || subAction === 'sync')) {
+    if (!authenticatedUser) {
+      res.writeHead(401, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'Unauthorized. Valid Bearer token required.' }));
+      return;
+    }
+    let reqPlayer = '';
+    try { reqPlayer = body?.playerName?.trim(); } catch(e){}
+    
+    if (reqPlayer && reqPlayer.toLowerCase() !== authenticatedUser.toLowerCase()) {
+      res.writeHead(403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'Forbidden. You can only modify your own data.' }));
+      return;
+    }
+  }
+
+  // Delete Room
+  if (method === 'DELETE' && !subAction) {
+    if (!authenticatedUser) {
+      res.writeHead(401, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'Unauthorized.' }));
+      return;
+    }
+    if (room.owner_name?.toLowerCase() !== authenticatedUser.toLowerCase()) {
+      res.writeHead(403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'Only the room owner can delete the room.' }));
+      return;
+    }
+    
+    if (Database.isNativeSqlite) {
+      Database.db.prepare('DELETE FROM members WHERE room_code = ?').run(roomCode);
+      Database.db.prepare('DELETE FROM rooms WHERE code = ?').run(roomCode);
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({ ok: true, message: `Room ${roomCode} deleted.` }));
     return;
   }
 
-  // Check 4-digit PIN if room has one
-  
-    const authHeader = req.headers['authorization'];
-    let authenticatedUser = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.replace('Bearer ', '').trim();
-      authenticatedUser = Database.getPlayerByToken(token);
-    }
-
-    if (method === 'POST' && (subAction === 'join' || subAction === 'sync')) {
-      if (!authenticatedUser) {
-        res.writeHead(401, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-        res.end(JSON.stringify({ ok: false, error: 'Unauthorized. Valid Bearer token required.' }));
-        return;
-      }
-      let reqPlayer = '';
-      try { reqPlayer = body?.playerName?.trim(); } catch(e){}
-      
-      if (reqPlayer && reqPlayer.toLowerCase() !== authenticatedUser.toLowerCase()) {
-        res.writeHead(403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-        res.end(JSON.stringify({ ok: false, error: 'Forbidden. You can only modify your own data.' }));
-        return;
-      }
-    }
-    
-    const providedPin = body?.pin || url.searchParams.get('pin') || req.headers['x-room-pin'];
+  // Check PIN
+  const providedPin = body?.pin || url.searchParams.get('pin') || req.headers['x-room-pin'];
   const pinCheck = Database.verifyRoomPin(roomCode, providedPin);
 
-  // 3. GET /api/squad/:code - Get room details, members, and aggregated inventories
+  // 3. GET /api/squad/:code
   if (method === 'GET' && !subAction) {
     if (!pinCheck.ok) {
       res.writeHead(403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -89,14 +122,42 @@ export async function handleSquadRequest(req, res, url, body) {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
     res.end(JSON.stringify({
       ok: true,
-      room: { code: room.code, name: room.name, hasPin: !!room.pin, updated_at: room.updated_at },
+      room: { code: room.code, name: room.name, hasPin: !!room.pin, owner_name: room.owner_name, updated_at: room.updated_at },
       members,
       inventories
     }));
     return;
   }
 
-  // 4. POST /api/squad/:code/join - Join room (requires PIN if room is protected)
+  // Transfer Ownership
+  if (method === 'POST' && subAction === 'transfer') {
+    if (!authenticatedUser) {
+      res.writeHead(401, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'Unauthorized.' }));
+      return;
+    }
+    if (room.owner_name?.toLowerCase() !== authenticatedUser.toLowerCase()) {
+      res.writeHead(403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'Only the room owner can transfer ownership.' }));
+      return;
+    }
+    
+    const newOwner = body?.newOwner?.trim();
+    if (!newOwner) {
+      res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'Missing newOwner.' }));
+      return;
+    }
+    
+    if (Database.isNativeSqlite) {
+      Database.db.prepare('UPDATE rooms SET owner_name = ?, updated_at = ? WHERE code = ?').run(newOwner, Date.now(), roomCode);
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({ ok: true, message: `Ownership transferred to ${newOwner}.` }));
+    return;
+  }
+
+  // 4. POST /api/squad/:code/join
   if (method === 'POST' && subAction === 'join') {
     if (!pinCheck.ok) {
       res.writeHead(403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
@@ -108,7 +169,6 @@ export async function handleSquadRequest(req, res, url, body) {
     const color = body?.color || '#e5c577';
     const syncToken = body?.syncToken || `tok_${Math.random().toString(36).substr(2, 8)}`;
 
-    
     if (!playerName) {
       res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({ ok: false, error: 'Missing playerName' }));
@@ -124,24 +184,48 @@ export async function handleSquadRequest(req, res, url, body) {
       }
     }
 
-
     const member = Database.addOrUpdateMember(roomCode, playerName, color, syncToken);
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
     res.end(JSON.stringify({ ok: true, member }));
     return;
   }
 
-  // 5. POST /api/squad/:code/sync - Ingest member relics & mastery into the room
-  
-  // 6. DELETE /api/squad/:code/leave
-  if (method === 'DELETE' && subAction === 'leave') {
-    const authHeader = req.headers['authorization'];
-    let authenticatedUser = null;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.replace('Bearer ', '').trim();
-      authenticatedUser = Database.getPlayerByToken(token);
+  // Kick Member
+  if (method === 'DELETE' && subAction === 'kick') {
+    if (!authenticatedUser) {
+      res.writeHead(401, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'Unauthorized.' }));
+      return;
+    }
+    if (room.owner_name?.toLowerCase() !== authenticatedUser.toLowerCase()) {
+      res.writeHead(403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'Only the room owner can kick members.' }));
+      return;
     }
     
+    const targetPlayer = body?.playerName?.trim();
+    if (!targetPlayer) {
+      res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'Missing playerName.' }));
+      return;
+    }
+    
+    if (targetPlayer.toLowerCase() === room.owner_name?.toLowerCase()) {
+      res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'Owner cannot kick themselves.' }));
+      return;
+    }
+
+    if (Database.isNativeSqlite) {
+      Database.db.prepare('DELETE FROM members WHERE room_code = ? AND player_name = ?').run(roomCode, targetPlayer);
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify({ ok: true, message: `Kicked ${targetPlayer} from room ${roomCode}` }));
+    return;
+  }
+
+  // 6. DELETE /api/squad/:code/leave
+  if (method === 'DELETE' && subAction === 'leave') {
     if (!authenticatedUser) {
       res.writeHead(401, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({ ok: false, error: 'Unauthorized.' }));
@@ -153,6 +237,12 @@ export async function handleSquadRequest(req, res, url, body) {
     if (playerName.toLowerCase() !== authenticatedUser.toLowerCase()) {
       res.writeHead(403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({ ok: false, error: 'Forbidden. You can only remove yourself.' }));
+      return;
+    }
+    
+    if (room.owner_name?.toLowerCase() === authenticatedUser.toLowerCase()) {
+      res.writeHead(403, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'The room owner cannot leave the room. You must delete the room or transfer ownership.' }));
       return;
     }
 
@@ -177,7 +267,6 @@ export async function handleSquadRequest(req, res, url, body) {
     const components = body?.components || null;
     const rawHash = body?.hash || '';
 
-    
     if (!playerName) {
       res.writeHead(400, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({ ok: false, error: 'Missing playerName' }));
@@ -192,7 +281,6 @@ export async function handleSquadRequest(req, res, url, body) {
         return;
       }
     }
-
 
     Database.savePlayerInventory(playerName, relics, mastery, components, rawHash);
 

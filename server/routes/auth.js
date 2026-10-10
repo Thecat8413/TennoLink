@@ -43,6 +43,7 @@ export async function handleAuthRequest(req, res, url, body) {
       playerName: result.playerName,
       syncToken: result.syncToken,
       isNew: result.isNew,
+      isAdmin: result.isAdmin,
       profile
     }));
     return;
@@ -72,6 +73,33 @@ export async function handleAuthRequest(req, res, url, body) {
     return;
   }
 
+  
+  // 3. Profile Route (GET / DELETE)
+  if (action === 'profile') {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader?.replace(/^Bearer\s+/, '').trim();
+    const playerName = Database.getPlayerByToken(token); // We need this in db.js or just write inline
+
+    if (!playerName) {
+      res.writeHead(401, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: false, error: 'Unauthorized' }));
+      return;
+    }
+
+    if (method === 'GET') {
+      const rooms = Database.getPlayerRooms(playerName); // We need this in db.js
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: true, player: playerName, rooms }));
+      return;
+    }
+
+    if (method === 'DELETE') {
+      Database.hardPurgeUser(playerName); // We need this in db.js
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ ok: true, deleted: true }));
+      return;
+    }
+  }
   res.writeHead(405, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
   res.end(JSON.stringify({ ok: false, error: 'Method not allowed' }));
 }

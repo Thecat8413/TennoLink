@@ -209,6 +209,8 @@ export class SquadManager {
       if (!response.ok) return;
       const data = await response.json();
       if (!data.ok || !data.members || !data.inventories) return;
+      
+      this.activeRoomData = data.room;
 
       let changed = false;
       for (const remoteMember of data.members) {

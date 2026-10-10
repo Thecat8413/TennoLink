@@ -7,6 +7,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { EventEmitter } from 'node:events';
+
+export const dbEvents = new EventEmitter();
 
 const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
 const DB_PATH = path.join(DATA_DIR, 'warframe.db');
@@ -52,6 +55,7 @@ function initSchema() {
       code TEXT UNIQUE NOT NULL,
       name TEXT NOT NULL,
       pin TEXT,
+      owner_name TEXT,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );
@@ -60,6 +64,9 @@ function initSchema() {
   // Migrate if column missing in existing db
   try {
     db.exec(`ALTER TABLE rooms ADD COLUMN pin TEXT;`);
+  } catch {}
+  try {
+    db.exec(`ALTER TABLE rooms ADD COLUMN owner_name TEXT;`);
   } catch {}
 
   // 2. Player Accounts Table (Gamertag + 4-digit PIN auth)
@@ -82,6 +89,7 @@ function initSchema() {
 
   try {
     db.exec(`ALTER TABLE player_accounts ADD COLUMN is_admin INTEGER DEFAULT 0;`);
+  } catch {}
 
   // 3. Squad Members Table
   db.exec(`
@@ -177,6 +185,7 @@ function saveJsonFallback() {
 }
 
 export const Database = {
+  db, fallbackStore, isNativeSqlite,
   // --- Player Authentication (Gamertag + Password) ---
   authenticatePlayer(playerName, password) {
     const cleanName = playerName.trim();
@@ -194,14 +203,14 @@ export const Database = {
           VALUES (?, ?, ?, ?, ?)
         `).run(cleanName, passwordHash, syncToken, now, now);
 
-        return { ok: true, isNew: true, playerName: cleanName, syncToken };
+        return { ok: true, isNew: true, playerName: cleanName, syncToken, isAdmin: false };
       }
 
       if (account.password_hash !== passwordHash && account.pin_hash !== passwordHash) {
         return { ok: false, error: 'Incorrect password for this Gamertag' };
       }
 
-      return { ok: true, isNew: false, playerName: cleanName, syncToken: account.sync_token };
+      return { ok: true, isNew: false, playerName: cleanName, syncToken: account.sync_token, isAdmin: !!account.is_admin };
     } else {
       let account = fallbackStore.accounts.get(cleanName);
       if (!account) {
@@ -209,16 +218,60 @@ export const Database = {
         account = { player_name: cleanName, password_hash: passwordHash, sync_token: syncToken, created_at: now, updated_at: now };
         fallbackStore.accounts.set(cleanName, account);
         saveJsonFallback();
-        return { ok: true, isNew: true, playerName: cleanName, syncToken };
+        return { ok: true, isNew: true, playerName: cleanName, syncToken, isAdmin: false };
       }
 
       if (account.password_hash !== passwordHash && account.pin_hash !== passwordHash) {
         return { ok: false, error: 'Incorrect password for this Gamertag' };
       }
-      return { ok: true, isNew: false, playerName: cleanName, syncToken: account.sync_token };
+      return { ok: true, isNew: false, playerName: cleanName, syncToken: account.sync_token, isAdmin: !!account.is_admin };
     }
   },
 
+  
+  getPlayerByToken(token) {
+    if (!token) return null;
+    if (isNativeSqlite) {
+      const account = db.prepare('SELECT player_name FROM player_accounts WHERE sync_token = ?').get(token);
+      return account ? account.player_name : null;
+    } else {
+      const account = Array.from(fallbackStore.accounts.values()).find(a => a.syncToken === token || a.sync_token === token);
+      return account ? (account.playerName || account.player_name) : null;
+    }
+  },
+
+  getPlayerRooms(playerName) {
+    if (!playerName) return [];
+    if (isNativeSqlite) {
+      const rows = db.prepare('SELECT room_code FROM members WHERE player_name = ?').all(playerName);
+      return rows.map(r => r.room_code);
+    } else {
+      return Array.from(fallbackStore.members.values())
+        .filter(m => m.playerName === playerName || m.player_name === playerName)
+        .map(m => m.roomCode || m.room_code);
+    }
+  },
+
+  hardPurgeUser(playerName) {
+    if (!playerName) return;
+    if (isNativeSqlite) {
+      db.prepare('DELETE FROM player_accounts WHERE player_name = ?').run(playerName);
+      db.prepare('DELETE FROM inventories WHERE player_name = ?').run(playerName);
+      db.prepare('DELETE FROM mastery_records WHERE player_name = ?').run(playerName);
+      db.prepare('DELETE FROM members WHERE player_name = ?').run(playerName);
+    } else {
+      fallbackStore.accounts.delete(playerName);
+      fallbackStore.inventories.delete(playerName);
+      fallbackStore.mastery.delete(playerName);
+      // Clean members
+      for (const [key, val] of fallbackStore.members.entries()) {
+        if (val.playerName === playerName || val.player_name === playerName) {
+           fallbackStore.members.delete(key);
+        }
+      }
+      saveJsonFallback();
+    }
+  },
   verifyToken(playerName, token) {
     if (!token) return false;
     const cleanName = playerName.trim();
@@ -232,21 +285,21 @@ export const Database = {
   },
 
   // --- Rooms (with 4-Digit PIN) ---
-  createRoom(code, name, pin = null) {
+  createRoom(code, name, pin = null, ownerName = null) {
     const now = Date.now();
     const id = `room_${now}_${Math.random().toString(36).substr(2, 6)}`;
     const cleanPin = pin ? String(pin).trim() : null;
 
     if (isNativeSqlite) {
       db.prepare(`
-        INSERT INTO rooms (id, code, name, pin, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run(id, code.toUpperCase(), name, cleanPin, now, now);
+        INSERT INTO rooms (id, code, name, pin, owner_name, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(id, code.toUpperCase(), name, cleanPin, ownerName, now, now);
     } else {
-      fallbackStore.rooms.set(code.toUpperCase(), { id, code: code.toUpperCase(), name, pin: cleanPin, created_at: now, updated_at: now });
+      fallbackStore.rooms.set(code.toUpperCase(), { id, code: code.toUpperCase(), name, pin: cleanPin, owner_name: ownerName, created_at: now, updated_at: now });
       saveJsonFallback();
     }
-    return { id, code: code.toUpperCase(), name, hasPin: !!cleanPin, created_at: now, updated_at: now };
+    return { id, code: code.toUpperCase(), name, hasPin: !!cleanPin, owner_name: ownerName, created_at: now, updated_at: now };
   },
 
   getRoom(code) {
@@ -270,11 +323,11 @@ export const Database = {
 
   listRooms() {
     if (isNativeSqlite) {
-      const stmt = db.prepare('SELECT id, code, name, (pin IS NOT NULL AND pin != "") AS has_pin, updated_at FROM rooms ORDER BY updated_at DESC LIMIT 50');
+      const stmt = db.prepare('SELECT id, code, name, (pin IS NOT NULL AND pin != "") AS has_pin, owner_name, updated_at FROM rooms ORDER BY updated_at DESC LIMIT 50');
       return stmt.all();
     } else {
       return Array.from(fallbackStore.rooms.values())
-        .map(r => ({ id: r.id, code: r.code, name: r.name, has_pin: !!r.pin, updated_at: r.updated_at }))
+        .map(r => ({ id: r.id, code: r.code, name: r.name, has_pin: !!r.pin, owner_name: r.owner_name, updated_at: r.updated_at }))
         .sort((a, b) => b.updated_at - a.updated_at);
     }
   },

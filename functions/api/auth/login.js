@@ -29,10 +29,15 @@ export async function onRequest(context) {
       player_name TEXT PRIMARY KEY,
       password_hash TEXT NOT NULL,
       sync_token TEXT,
+      is_admin INTEGER DEFAULT 0,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );
   `).run();
+
+  try {
+    await env.DB.prepare('ALTER TABLE player_accounts ADD COLUMN is_admin INTEGER DEFAULT 0').run();
+  } catch {}
 
   try {
     const body = await request.json();
@@ -76,6 +81,7 @@ export async function onRequest(context) {
       ok: true,
       playerName,
       syncToken,
+      isAdmin: !!account?.is_admin,
       profile: { playerName, items: [] }
     }), { status: 200, headers: corsHeaders });
   } catch (err) {
